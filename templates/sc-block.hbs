@@ -1,0 +1,134 @@
+{{#if details.response.score}}
+  <div>
+    <span class="p-key">Tenable Score:</span>
+    <span class="p-value">{{details.response.score}}</span>
+  </div>
+{{/if}}
+  <h1 class="p-title">
+      {{fa-icon "info" fixedWidth=true}}  Severity Levels
+  </h1>
+  {{#if details.response.total}}
+    <div>
+      <span class="p-key">Total Number of Serverities:</span>
+      <span class="p-value">{{details.response.total}}</span>
+    </div>
+  {{/if}}
+  {{#if details.response.severityInfo}}
+    <div>
+      <span class="p-key">Number of Informational Serverities:</span>
+      <span class="p-value">{{details.response.severityInfo}}</span>
+    </div>
+  {{/if}}
+  {{#if details.response.severityLow}}
+    <div>
+      <span class="p-key">Number of Low Serverities:</span>
+      <span class="p-value">{{details.response.severityLow}}</span>
+    </div>
+  {{/if}}
+  {{#if details.response.severityMedium}}
+    <div>
+      <span class="p-key">Number of Medium Serverities:</span>
+      <span class="p-value">{{details.response.severityMedium}}</span>
+    </div>
+  {{/if}}
+  {{#if details.response.severityHigh}}
+    <div>
+      <span class="p-key">Number of High Serverities:</span>
+      <span class="p-value">{{details.response.severityHigh}}</span>
+    </div>
+  {{/if}}
+  {{#if details.response.severityCritical}}
+    <div>
+      <span class="p-key">Number of Critical Serverities:</span>
+      <span class="p-value">{{details.response.severityCritical}}</span>
+    </div>
+  {{/if}}
+
+  <div>
+      <span class="p-title">{{fa-icon "info" fixedWidth=true}} Device Information </span>
+  </div>
+
+  {{#if details.response.macAddress}}
+    <div>
+      <span class="p-key">MAC Address:</span>
+      <span class="p-value">{{details.response.macAddress}}</span>
+    </div>
+  {{/if}}
+
+  {{#if details.response.netbiosName}}
+    <div>
+      <span class="p-key">BIOS Name:</span>
+      <span class="p-value">{{details.response.netbiosName}}</span>
+    </div>
+  {{/if}}
+  {{#if details.response.os}}
+    <div>
+      <span class="p-key">Operating System:</span>
+      <span class="p-value">{{details.response.os}}</span>
+    </div>
+  {{/if}}
+
+  {{#if details.response.dnsName}}
+    <div>
+      <span class="p-key">DNS Information:</span>
+      <span class="p-value">{{details.response.dnsName}}</span>
+    </div>
+  {{/if}}
+
+  {{#if details.response.policyName}}
+    <div>
+      <span class="p-key">Policy Name:</span>
+      <span class="p-value">{{details.response.policyName}}</span>
+    </div>
+  {{/if}}
+
+
+  <div>
+      <span class="p-title">{{fa-icon "info" fixedWidth=true}} Inforation from Last Scan </span>
+  </div>
+
+  {{#if details.response.lastScan}}
+    <div>
+      <span class="p-key">Last Scan Date:</span>
+      <span class="p-value">{{moment-format details.response.lastScan timeZone=timezone}}</span>
+    </div>
+  {{/if}}
+
+  {{#if details.response.lastAuthRun}}
+    <div>
+      <span class="p-key">Last Auth Run:</span>
+      <span class="p-value">{{mdetails.response.lastAuthRun timeZone=timezone}}</span>
+    </div>
+  {{/if}}
+
+  {{#if details.response.hasPassive}}
+    <div>
+      <span class="p-key">Has Passive:</span>
+      <span class="p-value">{{details.response.hasPassive}}</span>
+    </div>
+  {{/if}}
+
+  {{#if details.response.hasCompliance}}
+    <div>
+      <span class="p-key">Has Compliance:</span>
+      <span class="p-value">{{details.response.hasCompliance}}</span>
+    </div>
+  {{/if}}
+
+  {{#if details.response.repositories}}
+    <div>
+        <span class="p-title">{{fa-icon "sticky-note" fixedWidth=true}} Repository Information </span>
+    </div>
+    <div>
+        {{#each details.response.repositories as |repo|}}
+            {{#if repo.name}}
+            <span class="p-key">Name of Repository:</span>
+            <span class="p-value">{{repo.name}}</span>
+            {{/if}}
+            {{#if repo.description}}
+            <span class="p-key">Description of Repository:</span>
+            <span class="p-value">{{repo.description}}</span>
+            {{/if}}
+        {{/each}}
+    </div>
+{{/if}}
