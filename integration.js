@@ -37,15 +37,16 @@ function startup(logger) {
     defaults.key = fs.readFileSync(config.request.key);
   }
 
+
+  if (typeof config.request.ca === "string" && config.request.ca.length > 0) {
+    defaults.ca = fs.readFileSync(config.request.ca);
+  }
+
   if (
     typeof config.request.passphrase === "string" &&
     config.request.passphrase.length > 0
   ) {
     defaults.passphrase = config.request.passphrase;
-  }
-
-  if (typeof config.request.ca === "string" && config.request.ca.length > 0) {
-    defaults.ca = fs.readFileSync(config.request.ca);
   }
 
   if (
@@ -62,55 +63,46 @@ function startup(logger) {
   requestWithDefaults = request.defaults(defaults);
 }
 
-function getTokenCacheKey(options) {
-  return options.apiKey + options.apiSecret;
-}
+const getTokenCacheKey = (options) => options.apiKey + options.apiSecret;
+const statusCodeIsInvalid = (statusCode) => [200, 404, 202].every((validStatusCode) => statusCode !== validStatusCode);
 
-function getAuthToken(options, callback) {
+function getAuthToken({ url: tenableScUrl, userName, password, ...options }, callback) {
   let cacheKey = getTokenCacheKey(options);
-  //let token = tokenCache.get(cacheKey);
 
   request(
     {
       method: "POST",
-      uri: `${options.url}/rest/token`,
+      uri: `${tenableScUrl}/rest/token`,
       body: {
-        username: options.userName,
-        password: options.password
+        username: userName,
+        password
       },
       json: true
-    },
-    (err, resp, body) => {
+    }, (err, resp, body) => {
       if (err) {
         callback(err);
         return;
       }
 
-
-
-      Logger.trace({ body: body }, "Result of token lookup");
+      Logger.trace({ body }, "Result of token lookup");
 
       if (resp.statusCode != 200) {
-        callback({ err: new Error("status code was not 200"), body: body });
+        callback({ err: new Error("status code was not 200"), body });
         return;
       }
 
-      let cookie = resp.headers['set-cookie'];
+      let cookie = resp.headers['set-cookie'][1];
 
-      if (typeof cookie[1] === undefined){
-        callback({ err: new Error("Cookie Not Avilable"), body: body });
+      if (typeof cookie === undefined) {
+        callback({ err: new Error("Cookie Not Avilable"), body });
         return;
       }
 
-      let theCookie = cookie[1];
+      tokenCache.set(cacheKey, { cookie, token: body.response.token });
 
+      Logger.trace({ tokenCache }, "Checking TokenCache");
 
-      tokenCache.set(cacheKey, {cookie: theCookie, token: body.response.token});
-
-
-      Logger.trace({ tokenCache: tokenCache}, "Checking TokenCache");
-
-      callback(null, {cookie: theCookie, token: body.response.token});
+      callback(null, { cookie, token: body.response.token });
     }
   );
 }
@@ -124,172 +116,95 @@ function doLookup(entities, options, cb) {
   getAuthToken(options, (err, token) => {
     if (err) {
       Logger.error("get token errored", err);
-      //callback({ err: err });
       return;
     }
 
-    Logger.trace({ token: token }, "what does the token look like in doLookup");
+    Logger.trace({ token }, "what does the token look like in doLookup");
+
+    let cookieJar = request.jar();
+    let { cookie } = token;
+    const tenableScUrl = options.url;
+    cookieJar.setCookie(cookie, tenableScUrl);
+
+    let requestOptions = {
+      method: "GET",
+      uri: `${tenableScUrl}/rest/deviceInfo`,
+      qs: null,
+      headers: {
+        "X-SecurityCenter": token.token
+      },
+      jar: cookieJar,
+      json: true
+    };
 
     entities.forEach(entity => {
-      //do the lookup
+      const qsKey = entity.isIPv4 ? "ip" : entity.isDomain && "dnsName";
+      if (!qsKey)
+        return done({
+          message: "You have added a new Type that will not work with this Integration"
+        });
 
-      if(entity.isIPv4){
-      var cookieJar = request.jar();
-      var cookie = token.cookie
-      cookieJar.setCookie(token.cookie, options.url);
-
-      let requestOptions = {
-        method: "GET",
-        uri: `${options.url}/rest/deviceInfo`,
-        qs:{
-            ip: entity.value
-          },
-        headers: {
-          "X-SecurityCenter": token.token
-        },
-        jar: cookieJar,
-        json: true
-      };
-
+      requestOptions.qs = {
+        [qsKey]: entity.value
+      }
 
       Logger.trace({ uri: requestOptions }, "Request URI");
-      //Logger.trace({ uri: requestOptions.headers }, "Request Headers");
-      //Logger.trace({ uri: requestOptions.qs }, "Request Query Parameters");
 
-      tasks.push(function(done) {
-        requestWithDefaults(requestOptions, function(error, res, body) {
+      tasks.push(function (done) {
+        requestWithDefaults(requestOptions, function (error, res, body) {
+          const statusCode = res && res.statusCode;
           if (error) {
             return done(error);
           }
 
           Logger.trace(requestOptions);
           Logger.trace(
-            { body: body, statusCode: res ? res.statusCode : "N/A" },
+            { body, statusCode: statusCode || "N/A" },
             "Result of Lookup"
           );
 
-          let result = {};
-
-          if (res.statusCode === 200) {
-            // we got data!
-            result = {
-              entity: entity,
-              body: body
-            };
-          } else if (res.statusCode === 404) {
-            // no result found
-            result = {
-              entity: entity,
-              body: null
-            };
-          } else if (res.statusCode === 202) {
-            // no result found
-            result = {
-              entity: entity,
-              body: null
-            };
-          } else {
-            // unexpected status code
+          if (statusCodeIsInvalid(statusCode))
             return done({
               err: body,
               detail: `${body.error}: ${body.message}`
             });
-          }
 
-          done(null, result);
+          done(null, {
+            entity,
+            body: statusCode === 200 ? body : null
+          });
         });
       });
-    } else if (entity.isDomain){
-  var cookieJar = request.jar();
-  var cookie = token.cookie
-  cookieJar.setCookie(token.cookie, options.url);
-
-  let requestOptions = {
-    method: "GET",
-    uri: `${options.url}/rest/deviceInfo`,
-    qs:{
-        dnsName: entity.value
-      },
-    headers: {
-      "X-SecurityCenter": token.token
-    },
-    jar: cookieJar,
-    json: true
-  };
-
-
-  Logger.trace({ uri: requestOptions }, "Request URI");
-  //Logger.trace({ uri: requestOptions.headers }, "Request Headers");
-  //Logger.trace({ uri: requestOptions.qs }, "Request Query Parameters");
-
-  tasks.push(function(done) {
-    requestWithDefaults(requestOptions, function(error, res, body) {
-      if (error) {
-        return done(error);
-      }
-
-      Logger.trace(requestOptions);
-      Logger.trace(
-        { body: body, statusCode: res ? res.statusCode : "N/A" },
-        "Result of Lookup"
-      );
-
-      let result = {};
-
-      if (res.statusCode === 200) {
-        // we got data!
-        result = {
-          entity: entity,
-          body: body
-        };
-      } else if (res.statusCode === 404) {
-        // no result found
-        result = {
-          entity: entity,
-          body: null
-        };
-      } else if (res.statusCode === 202) {
-        // no result found
-        result = {
-          entity: entity,
-          body: null
-        };
-      } else {
-        // unexpected status code
-        return done({
-          err: body,
-          detail: `${body.error}: ${body.message}`
-        });
-      }
-
-      done(null, result);
     });
-  });
-}
-});
 
 
     async.parallelLimit(tasks, MAX_PARALLEL_LOOKUPS, (err, results) => {
       if (err) {
-        Logger.error({ err: err }, "Error");
+        Logger.error({ err }, "Error");
         cb(err);
         return;
       }
 
-      results.forEach(result => {
-        if (result.body === null || _isMiss(result.body) || _.isEmpty(result.body)) {
+      results.forEach(({ body, entity }) => {
+        if (body === null || _isMiss(body) || _.isEmpty(body)) {
           lookupResults.push({
-            entity: result.entity,
+            entity,
             data: null
           });
         } else {
-          result.body.response.lastScan = new Date(parseInt(result.body.response.lastScan)*1000);
-          result.body.response.lastAuthRun = new Date(parseInt(result.body.response.lastAuthRun)*1000);
+          body.response.lastScan = new Date(parseInt(body.response.lastScan) * 1000);
+          body.response.lastAuthRun = new Date(parseInt(body.response.lastAuthRun) * 1000);
+          const details = !entity.isIPv4 ? body : {
+            ...body,
+            IpDetailsUrl: `${tenableScUrl}/#vulnerabilities/cumulative/sumip/` +
+              `%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22ip%22%2C%22value%22%3A%20%22${entity.value}%22%7D%5D%7D`
+          };
+
           lookupResults.push({
-            entity: result.entity,
+            entity,
             data: {
               summary: [],
-              details: result.body
+              details
             }
           });
         }
@@ -301,11 +216,7 @@ function doLookup(entities, options, cb) {
   });
 }
 
-function _isMiss(body) {
-  if (!body) {
-    return true;
-  }
-}
+const _isMiss = (body) => !body;
 
 function validateStringOption(errors, options, optionName, errMessage) {
   if (
@@ -326,20 +237,26 @@ function validateOptions(options, callback) {
   validateStringOption(
     errors,
     options,
-    "apiKey",
-    "You must provide a valid API Key"
+    "url",
+    "You must provide a valid API URL"
   );
   validateStringOption(
     errors,
     options,
-    "apiSecret",
-    "You must provide a valid API Secret"
+    "userName",
+    "You must provide a valid Username"
+  );
+  validateStringOption(
+    errors,
+    options,
+    "password",
+    "You must provide a valid Password"
   );
   callback(null, errors);
 }
 
 module.exports = {
-  doLookup: doLookup,
-  startup: startup,
-  validateOptions: validateOptions
+  doLookup,
+  startup,
+  validateOptions
 };
