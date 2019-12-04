@@ -159,7 +159,7 @@ function doLookup(entities, options, cb) {
 
           Logger.trace(requestOptions);
           Logger.trace(
-            { body, statusCode: "N/A" },
+            { body, statusCode: statusCode || "N/A" },
             "Result of Lookup"
           );
 
@@ -170,7 +170,7 @@ function doLookup(entities, options, cb) {
             });
 
           done(null, {
-            entity: entity,
+            entity,
             body: statusCode === 200 ? body : null
           });
         });
