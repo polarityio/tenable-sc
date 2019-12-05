@@ -2,7 +2,9 @@
   <div>
     <span class="p-key">Tenable Score:</span>
     <span class="p-value">{{details.response.score}}</span>
-    <a class="p-link" href={{details.IpDetailsUrl}}>View in Tenable.sc</a>
+    {{#if details.IpDetailsUrl}}
+      <a class="p-link" href={{details.IpDetailsUrl}}>View in Tenable.sc</a>
+    {{/if}}
   </div>
 {{/if}}
   <h1 class="p-title">

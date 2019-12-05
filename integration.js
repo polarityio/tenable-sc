@@ -26,38 +26,30 @@ function startup(logger) {
   let defaults = {};
   Logger = logger;
 
-  if (
-    typeof config.request.cert === "string" &&
-    config.request.cert.length > 0
-  ) {
-    defaults.cert = fs.readFileSync(config.request.cert);
+  const { cert, key, ca, passphrase, proxy, rejectUnauthorized } = config.request;
+
+  if (typeof cert === "string" && cert.length > 0) {
+    defaults.cert = fs.readFileSync(cert);
   }
 
-  if (typeof config.request.key === "string" && config.request.key.length > 0) {
-    defaults.key = fs.readFileSync(config.request.key);
+  if (typeof key === "string" && key.length > 0) {
+    defaults.key = fs.readFileSync(key);
   }
 
-
-  if (typeof config.request.ca === "string" && config.request.ca.length > 0) {
-    defaults.ca = fs.readFileSync(config.request.ca);
+  if (typeof ca === "string" && ca.length > 0) {
+    defaults.ca = fs.readFileSync(ca);
   }
 
-  if (
-    typeof config.request.passphrase === "string" &&
-    config.request.passphrase.length > 0
-  ) {
-    defaults.passphrase = config.request.passphrase;
+  if (typeof passphrase === "string" && passphrase.length > 0) {
+    defaults.passphrase = passphrase;
   }
 
-  if (
-    typeof config.request.proxy === "string" &&
-    config.request.proxy.length > 0
-  ) {
-    defaults.proxy = config.request.proxy;
+  if (typeof proxy === "string" && proxy.length > 0) {
+    defaults.proxy = proxy;
   }
 
-  if (typeof config.request.rejectUnauthorized === "boolean") {
-    defaults.rejectUnauthorized = config.request.rejectUnauthorized;
+  if (typeof rejectUnauthorized === "boolean") {
+    defaults.rejectUnauthorized = rejectUnauthorized;
   }
 
   requestWithDefaults = request.defaults(defaults);
@@ -216,7 +208,7 @@ function doLookup(entities, options, cb) {
   });
 }
 
-const _isMiss = (body) => !body;
+const _isMiss = (body) => !body || !body.response || !body.response.score;
 
 function validateStringOption(errors, options, optionName, errMessage) {
   if (
