@@ -113,22 +113,9 @@ function doLookup(entities, options, cb) {
 
     Logger.trace({ token }, "what does the token look like in doLookup");
 
-    let cookieJar = request.jar();
     let { cookie } = token;
     const tenableScUrl = options.url;
-    cookieJar.setCookie(cookie, tenableScUrl);
-
-    let requestOptions = {
-      method: "GET",
-      uri: `${tenableScUrl}/rest/deviceInfo`,
-      qs: null,
-      headers: {
-        "X-SecurityCenter": token.token
-      },
-      jar: cookieJar,
-      json: true
-    };
-
+    
     entities.forEach(entity => {
       const qsKey = entity.isIPv4 ? "ip" : entity.isDomain && "dnsName";
       if (!qsKey)
@@ -136,9 +123,22 @@ function doLookup(entities, options, cb) {
           message: "You have added a new Type that will not work with this Integration"
         });
 
-      requestOptions.qs = {
-        [qsKey]: entity.value
-      }
+      let cookieJar = request.jar();
+      cookieJar.setCookie(cookie, tenableScUrl);
+
+      const requestOptions = {
+        method: "GET",
+        uri: `${tenableScUrl}/rest/deviceInfo`,
+        qs: {
+          [qsKey]: entity.value
+        },
+        headers: {
+          "X-SecurityCenter": token.token
+        },
+        jar: cookieJar,
+        json: true
+      };
+
 
       Logger.trace({ uri: requestOptions }, "Request URI");
 
@@ -191,7 +191,7 @@ function doLookup(entities, options, cb) {
             IpDetailsUrl: `${tenableScUrl}/#vulnerabilities/cumulative/sumip/` +
               `%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22ip%22%2C%22value%22%3A%20%22${entity.value}%22%7D%5D%7D`
           };
-
+          
           lookupResults.push({
             entity,
             data: {
