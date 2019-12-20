@@ -56,7 +56,8 @@ function startup(logger) {
 }
 
 const getTokenCacheKey = (options) => options.apiKey + options.apiSecret;
-const statusCodeIsInvalid = (statusCode) => [200, 404, 202].every((validStatusCode) => statusCode !== validStatusCode);
+const statusCodeIsInvalid = (statusCode) =>
+  [200, 404, 202].every((validStatusCode) => statusCode !== validStatusCode);
 
 function getAuthToken({ url: tenableScUrl, userName, password, ...options }, callback) {
   let cacheKey = getTokenCacheKey(options);
@@ -83,7 +84,7 @@ function getAuthToken({ url: tenableScUrl, userName, password, ...options }, cal
         return;
       }
 
-      let cookie = resp.headers['set-cookie'][1];
+      let cookie = resp.headers["set-cookie"][1];
 
       if (typeof cookie === undefined) {
         callback({ err: new Error("Cookie Not Avilable"), body });
@@ -115,13 +116,14 @@ function doLookup(entities, options, cb) {
 
     let { cookie } = token;
     const tenableScUrl = options.url;
-    
-    entities.forEach(entity => {
+
+    entities.forEach((entity) => {
       const qsKey = entity.isIPv4 ? "ip" : entity.isDomain && "dnsName";
       if (!qsKey)
-        return done({
-          message: "You have added a new Type that will not work with this Integration"
-        });
+        return Logger.error(
+          { err: new Error("You have added a new Type that will not work with this Integration") },
+          "Error"
+        );
 
       let cookieJar = request.jar();
       cookieJar.setCookie(cookie, tenableScUrl);
@@ -139,21 +141,17 @@ function doLookup(entities, options, cb) {
         json: true
       };
 
-
       Logger.trace({ uri: requestOptions }, "Request URI");
 
-      tasks.push(function (done) {
-        requestWithDefaults(requestOptions, function (error, res, body) {
+      tasks.push(function(done) {
+        requestWithDefaults(requestOptions, function(error, res, body) {
           const statusCode = res && res.statusCode;
           if (error) {
             return done(error);
           }
 
           Logger.trace(requestOptions);
-          Logger.trace(
-            { body, statusCode: statusCode || "N/A" },
-            "Result of Lookup"
-          );
+          Logger.trace({ body, statusCode: statusCode || "N/A" }, "Result of Lookup");
 
           if (statusCodeIsInvalid(statusCode))
             return done({
@@ -168,7 +166,6 @@ function doLookup(entities, options, cb) {
         });
       });
     });
-
 
     async.parallelLimit(tasks, MAX_PARALLEL_LOOKUPS, (err, results) => {
       if (err) {
@@ -185,13 +182,17 @@ function doLookup(entities, options, cb) {
           });
         } else {
           body.response.lastScan = new Date(parseInt(body.response.lastScan) * 1000);
-          body.response.lastAuthRun = new Date(parseInt(body.response.lastAuthRun) * 1000);
-          const details = !entity.isIPv4 ? body : {
-            ...body,
-            IpDetailsUrl: `${tenableScUrl}/#vulnerabilities/cumulative/sumip/` +
-              `%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22ip%22%2C%22value%22%3A%20%22${entity.value}%22%7D%5D%7D`
-          };
-          
+          body.response.lastAuthRun = new Date(
+            parseInt(body.response.lastAuthRun) * 1000
+          );
+          const details = !entity.isIPv4
+            ? body
+            : {
+                ...body,
+                IpDetailsUrl: `${tenableScUrl}/#vulnerabilities/cumulative/sumip/` +
+                  `%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22ip%22%2C%22value%22%3A%20%22${entity.value}%22%7D%5D%7D`
+              };
+
           lookupResults.push({
             entity,
             data: {
@@ -226,24 +227,9 @@ function validateStringOption(errors, options, optionName, errMessage) {
 function validateOptions(options, callback) {
   let errors = [];
 
-  validateStringOption(
-    errors,
-    options,
-    "url",
-    "You must provide a valid API URL"
-  );
-  validateStringOption(
-    errors,
-    options,
-    "userName",
-    "You must provide a valid Username"
-  );
-  validateStringOption(
-    errors,
-    options,
-    "password",
-    "You must provide a valid Password"
-  );
+  validateStringOption(errors, options, "url", "You must provide a valid API URL");
+  validateStringOption(errors, options, "userName", "You must provide a valid Username");
+  validateStringOption(errors, options, "password", "You must provide a valid Password");
   callback(null, errors);
 }
 
