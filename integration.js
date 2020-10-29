@@ -26,45 +26,38 @@ function startup(logger) {
   let defaults = {};
   Logger = logger;
 
-  if (
-    typeof config.request.cert === "string" &&
-    config.request.cert.length > 0
-  ) {
-    defaults.cert = fs.readFileSync(config.request.cert);
+  const { cert, key, ca, passphrase, proxy, rejectUnauthorized } = config.request;
+
+  if (typeof cert === "string" && cert.length > 0) {
+    defaults.cert = fs.readFileSync(cert);
   }
 
-  if (typeof config.request.key === "string" && config.request.key.length > 0) {
-    defaults.key = fs.readFileSync(config.request.key);
+  if (typeof key === "string" && key.length > 0) {
+    defaults.key = fs.readFileSync(key);
   }
 
-
-  if (typeof config.request.ca === "string" && config.request.ca.length > 0) {
-    defaults.ca = fs.readFileSync(config.request.ca);
+  if (typeof ca === "string" && ca.length > 0) {
+    defaults.ca = fs.readFileSync(ca);
   }
 
-  if (
-    typeof config.request.passphrase === "string" &&
-    config.request.passphrase.length > 0
-  ) {
-    defaults.passphrase = config.request.passphrase;
+  if (typeof passphrase === "string" && passphrase.length > 0) {
+    defaults.passphrase = passphrase;
   }
 
-  if (
-    typeof config.request.proxy === "string" &&
-    config.request.proxy.length > 0
-  ) {
-    defaults.proxy = config.request.proxy;
+  if (typeof proxy === "string" && proxy.length > 0) {
+    defaults.proxy = proxy;
   }
 
-  if (typeof config.request.rejectUnauthorized === "boolean") {
-    defaults.rejectUnauthorized = config.request.rejectUnauthorized;
+  if (typeof rejectUnauthorized === "boolean") {
+    defaults.rejectUnauthorized = rejectUnauthorized;
   }
 
   requestWithDefaults = request.defaults(defaults);
 }
 
 const getTokenCacheKey = (options) => options.apiKey + options.apiSecret;
-const statusCodeIsInvalid = (statusCode) => [200, 404, 202].every((validStatusCode) => statusCode !== validStatusCode);
+const statusCodeIsInvalid = (statusCode) =>
+  [200, 404, 202].every((validStatusCode) => statusCode !== validStatusCode);
 
 function getAuthToken({ url: tenableScUrl, userName, password, ...options }, callback) {
   let cacheKey = getTokenCacheKey(options);
@@ -91,7 +84,7 @@ function getAuthToken({ url: tenableScUrl, userName, password, ...options }, cal
         return;
       }
 
-      let cookie = resp.headers['set-cookie'][1];
+      let cookie = resp.headers["set-cookie"][1];
 
       if (typeof cookie === undefined) {
         callback({ err: new Error("Cookie Not Avilable"), body });
@@ -121,47 +114,44 @@ function doLookup(entities, options, cb) {
 
     Logger.trace({ token }, "what does the token look like in doLookup");
 
-    let cookieJar = request.jar();
     let { cookie } = token;
     const tenableScUrl = options.url;
-    cookieJar.setCookie(cookie, tenableScUrl);
 
-    let requestOptions = {
-      method: "GET",
-      uri: `${tenableScUrl}/rest/deviceInfo`,
-      qs: null,
-      headers: {
-        "X-SecurityCenter": token.token
-      },
-      jar: cookieJar,
-      json: true
-    };
-
-    entities.forEach(entity => {
+    entities.forEach((entity) => {
       const qsKey = entity.isIPv4 ? "ip" : entity.isDomain && "dnsName";
       if (!qsKey)
-        return done({
-          message: "You have added a new Type that will not work with this Integration"
-        });
+        return Logger.error(
+          { err: new Error("You have added a new Type that will not work with this Integration") },
+          "Error"
+        );
 
-      requestOptions.qs = {
-        [qsKey]: entity.value
-      }
+      let cookieJar = request.jar();
+      cookieJar.setCookie(cookie, tenableScUrl);
+
+      const requestOptions = {
+        method: "GET",
+        uri: `${tenableScUrl}/rest/deviceInfo`,
+        qs: {
+          [qsKey]: entity.value
+        },
+        headers: {
+          "X-SecurityCenter": token.token
+        },
+        jar: cookieJar,
+        json: true
+      };
 
       Logger.trace({ uri: requestOptions }, "Request URI");
 
-      tasks.push(function (done) {
-        requestWithDefaults(requestOptions, function (error, res, body) {
+      tasks.push(function(done) {
+        requestWithDefaults(requestOptions, function(error, res, body) {
           const statusCode = res && res.statusCode;
           if (error) {
             return done(error);
           }
 
           Logger.trace(requestOptions);
-          Logger.trace(
-            { body, statusCode: statusCode || "N/A" },
-            "Result of Lookup"
-          );
+          Logger.trace({ body, statusCode: statusCode || "N/A" }, "Result of Lookup");
 
           if (statusCodeIsInvalid(statusCode))
             return done({
@@ -176,7 +166,6 @@ function doLookup(entities, options, cb) {
         });
       });
     });
-
 
     async.parallelLimit(tasks, MAX_PARALLEL_LOOKUPS, (err, results) => {
       if (err) {
@@ -193,12 +182,16 @@ function doLookup(entities, options, cb) {
           });
         } else {
           body.response.lastScan = new Date(parseInt(body.response.lastScan) * 1000);
-          body.response.lastAuthRun = new Date(parseInt(body.response.lastAuthRun) * 1000);
-          const details = !entity.isIPv4 ? body : {
-            ...body,
-            IpDetailsUrl: `${tenableScUrl}/#vulnerabilities/cumulative/sumip/` +
-              `%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22ip%22%2C%22value%22%3A%20%22${entity.value}%22%7D%5D%7D`
-          };
+          body.response.lastAuthRun = new Date(
+            parseInt(body.response.lastAuthRun) * 1000
+          );
+          const details = !entity.isIPv4
+            ? body
+            : {
+                ...body,
+                IpDetailsUrl: `${tenableScUrl}/#vulnerabilities/cumulative/sumip/` +
+                  `%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22ip%22%2C%22value%22%3A%20%22${entity.value}%22%7D%5D%7D`
+              };
 
           lookupResults.push({
             entity,
@@ -216,7 +209,7 @@ function doLookup(entities, options, cb) {
   });
 }
 
-const _isMiss = (body) => !body;
+const _isMiss = (body) => !body || !body.response || !body.response.score;
 
 function validateStringOption(errors, options, optionName, errMessage) {
   if (
@@ -234,24 +227,9 @@ function validateStringOption(errors, options, optionName, errMessage) {
 function validateOptions(options, callback) {
   let errors = [];
 
-  validateStringOption(
-    errors,
-    options,
-    "url",
-    "You must provide a valid API URL"
-  );
-  validateStringOption(
-    errors,
-    options,
-    "userName",
-    "You must provide a valid Username"
-  );
-  validateStringOption(
-    errors,
-    options,
-    "password",
-    "You must provide a valid Password"
-  );
+  validateStringOption(errors, options, "url", "You must provide a valid API URL");
+  validateStringOption(errors, options, "userName", "You must provide a valid Username");
+  validateStringOption(errors, options, "password", "You must provide a valid Password");
   callback(null, errors);
 }
 
