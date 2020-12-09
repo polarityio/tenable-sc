@@ -1,17 +1,17 @@
-"use strict";
+'use strict';
 
-const request = require("request");
-const _ = require("lodash");
-const config = require("./config/config");
-const async = require("async");
-const fs = require("fs");
+const request = require('request');
+const _ = require('lodash');
+const config = require('./config/config');
+const async = require('async');
+const fs = require('fs');
 
 let Logger;
 let requestWithDefaults;
 
 const MAX_PARALLEL_LOOKUPS = 10;
 
-const NodeCache = require("node-cache");
+const NodeCache = require('node-cache');
 const tokenCache = new NodeCache({
   stdTTL: 1000 * 1000
 });
@@ -28,27 +28,27 @@ function startup(logger) {
 
   const { cert, key, ca, passphrase, proxy, rejectUnauthorized } = config.request;
 
-  if (typeof cert === "string" && cert.length > 0) {
+  if (typeof cert === 'string' && cert.length > 0) {
     defaults.cert = fs.readFileSync(cert);
   }
 
-  if (typeof key === "string" && key.length > 0) {
+  if (typeof key === 'string' && key.length > 0) {
     defaults.key = fs.readFileSync(key);
   }
 
-  if (typeof ca === "string" && ca.length > 0) {
+  if (typeof ca === 'string' && ca.length > 0) {
     defaults.ca = fs.readFileSync(ca);
   }
 
-  if (typeof passphrase === "string" && passphrase.length > 0) {
+  if (typeof passphrase === 'string' && passphrase.length > 0) {
     defaults.passphrase = passphrase;
   }
 
-  if (typeof proxy === "string" && proxy.length > 0) {
+  if (typeof proxy === 'string' && proxy.length > 0) {
     defaults.proxy = proxy;
   }
 
-  if (typeof rejectUnauthorized === "boolean") {
+  if (typeof rejectUnauthorized === 'boolean') {
     defaults.rejectUnauthorized = rejectUnauthorized;
   }
 
@@ -56,44 +56,44 @@ function startup(logger) {
 }
 
 const getTokenCacheKey = (options) => options.apiKey + options.apiSecret;
-const statusCodeIsInvalid = (statusCode) =>
-  [200, 404, 202].every((validStatusCode) => statusCode !== validStatusCode);
+const statusCodeIsInvalid = (statusCode) => [200, 404, 202].every((validStatusCode) => statusCode !== validStatusCode);
 
 function getAuthToken({ url: tenableScUrl, userName, password, ...options }, callback) {
   let cacheKey = getTokenCacheKey(options);
 
-  request(
+  requestWithDefaults(
     {
-      method: "POST",
+      method: 'POST',
       uri: `${tenableScUrl}/rest/token`,
       body: {
         username: userName,
         password
       },
       json: true
-    }, (err, resp, body) => {
+    },
+    (err, resp, body) => {
       if (err) {
         callback(err);
         return;
       }
 
-      Logger.trace({ body }, "Result of token lookup");
+      Logger.trace({ body }, 'Result of token lookup');
 
       if (resp.statusCode != 200) {
-        callback({ err: new Error("status code was not 200"), body });
+        callback({ err: new Error('status code was not 200'), body });
         return;
       }
 
-      let cookie = resp.headers["set-cookie"][1];
+      let cookie = resp.headers['set-cookie'][1];
 
       if (typeof cookie === undefined) {
-        callback({ err: new Error("Cookie Not Avilable"), body });
+        callback({ err: new Error('Cookie Not Avilable'), body });
         return;
       }
 
       tokenCache.set(cacheKey, { cookie, token: body.response.token });
 
-      Logger.trace({ tokenCache }, "Checking TokenCache");
+      Logger.trace({ tokenCache }, 'Checking TokenCache');
 
       callback(null, { cookie, token: body.response.token });
     }
@@ -108,50 +108,68 @@ function doLookup(entities, options, cb) {
 
   getAuthToken(options, (err, token) => {
     if (err) {
-      Logger.error("get token errored", err);
+      Logger.error('get token errored', err);
       return;
     }
 
-    Logger.trace({ token }, "what does the token look like in doLookup");
+    Logger.trace({ token }, 'what does the token look like in doLookup');
 
     let { cookie } = token;
-    const tenableScUrl = options.url;
 
     entities.forEach((entity) => {
-      const qsKey = entity.isIPv4 ? "ip" : entity.isDomain && "dnsName";
-      if (!qsKey)
-        return Logger.error(
-          { err: new Error("You have added a new Type that will not work with this Integration") },
-          "Error"
-        );
-
       let cookieJar = request.jar();
-      cookieJar.setCookie(cookie, tenableScUrl);
+      cookieJar.setCookie(cookie, options.url);
 
       const requestOptions = {
-        method: "GET",
-        uri: `${tenableScUrl}/rest/deviceInfo`,
-        qs: {
-          [qsKey]: entity.value
-        },
         headers: {
-          "X-SecurityCenter": token.token
+          'X-SecurityCenter': token.token
         },
         jar: cookieJar,
         json: true
       };
 
-      Logger.trace({ uri: requestOptions }, "Request URI");
+      if (entity.isIPv4) {
+        (requestOptions.method = 'GET'),
+          (requestOptions.uri = `${options.url}/rest/deviceInfo`),
+          (requestOptions.qs = {
+            ip: `${entity.value}`
+          });
+      } else if (entity.isDomain) {
+        (requestOptions.method = 'GET'),
+          (requestOptions.uri = `${options.url}/rest/deviceInfo`),
+          (requestOptions.qs = {
+            dnsName: `${entity.value}`
+          });
+      } else if (entity.type === 'cve') {
+        (requestOptions.method = 'POST'),
+          (requestOptions.uri = `${options.url}/rest/analysis`),
+          (requestOptions.body = {
+            query: {
+              type: 'vuln',
+              tool: 'listvuln',
+              startOffset: 0,
+              endOffset: options.maxResults || 50,
+              filters: [{ filterName: 'cveID', operator: '=', value: entity.value }],
+              vulnTool: 'listvuln'
+            },
+            sourceType: 'cumulative',
+            type: 'vuln'
+          });
+      } else {
+        return;
+      }
 
-      tasks.push(function(done) {
-        requestWithDefaults(requestOptions, function(error, res, body) {
+      Logger.trace({ uri: requestOptions }, 'Request URI');
+
+      tasks.push(function (done) {
+        requestWithDefaults(requestOptions, function (error, res, body) {
           const statusCode = res && res.statusCode;
           if (error) {
             return done(error);
           }
 
           Logger.trace(requestOptions);
-          Logger.trace({ body, statusCode: statusCode || "N/A" }, "Result of Lookup");
+          Logger.trace({ body, statusCode: statusCode || 'N/A' }, 'Result of Lookup');
 
           if (statusCodeIsInvalid(statusCode))
             return done({
@@ -169,27 +187,32 @@ function doLookup(entities, options, cb) {
 
     async.parallelLimit(tasks, MAX_PARALLEL_LOOKUPS, (err, results) => {
       if (err) {
-        Logger.error({ err }, "Error");
+        Logger.error({ err }, 'Error');
         cb(err);
         return;
       }
 
       results.forEach(({ body, entity }) => {
-        if (body === null || _isMiss(body) || _.isEmpty(body)) {
+        if (
+          body === null ||
+          _isMiss(body) ||
+          _.isEmpty(body) ||
+          (body.response.results && _.isEmpty(body.response.results)) ||
+          (body.response.repositories && _.isEmpty(body.response.repositories))
+        ) {
           lookupResults.push({
             entity,
             data: null
           });
         } else {
           body.response.lastScan = new Date(parseInt(body.response.lastScan) * 1000);
-          body.response.lastAuthRun = new Date(
-            parseInt(body.response.lastAuthRun) * 1000
-          );
+          body.response.lastAuthRun = new Date(parseInt(body.response.lastAuthRun) * 1000);
           const details = !entity.isIPv4
             ? body
             : {
                 ...body,
-                IpDetailsUrl: `${tenableScUrl}/#vulnerabilities/cumulative/sumip/` +
+                IpDetailsUrl:
+                  `${options.url}/#vulnerabilities/cumulative/sumip/` +
                   `%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22ip%22%2C%22value%22%3A%20%22${entity.value}%22%7D%5D%7D`
               };
 
@@ -203,19 +226,18 @@ function doLookup(entities, options, cb) {
         }
       });
 
-      Logger.debug({ lookupResults }, "Results");
+      Logger.debug({ lookupResults }, 'Results');
       cb(null, lookupResults);
     });
   });
 }
 
-const _isMiss = (body) => !body || !body.response || !body.response.score;
+const _isMiss = (body) => !body || !body.response;
 
 function validateStringOption(errors, options, optionName, errMessage) {
   if (
-    typeof options[optionName].value !== "string" ||
-    (typeof options[optionName].value === "string" &&
-      options[optionName].value.length === 0)
+    typeof options[optionName].value !== 'string' ||
+    (typeof options[optionName].value === 'string' && options[optionName].value.length === 0)
   ) {
     errors.push({
       key: optionName,
@@ -227,9 +249,9 @@ function validateStringOption(errors, options, optionName, errMessage) {
 function validateOptions(options, callback) {
   let errors = [];
 
-  validateStringOption(errors, options, "url", "You must provide a valid API URL");
-  validateStringOption(errors, options, "userName", "You must provide a valid Username");
-  validateStringOption(errors, options, "password", "You must provide a valid Password");
+  validateStringOption(errors, options, 'url', 'You must provide a valid API URL');
+  validateStringOption(errors, options, 'userName', 'You must provide a valid Username');
+  validateStringOption(errors, options, 'password', 'You must provide a valid Password');
   callback(null, errors);
 }
 
