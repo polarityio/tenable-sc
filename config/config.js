@@ -5,7 +5,7 @@ module.exports = {
    * @type String
    * @required
    */
-  name: 'TenableSC',
+  name: 'tenable.sc (Security Center)',
   /**
    * The acronym that appears in the notification window when information from this integration
    * is displayed.  Note that the acronym is included as part of each "tag" in the summary information
@@ -23,8 +23,8 @@ module.exports = {
    * @optional
    */
   description:
-    'With Tenable.sc (formerly SecurityCenter) you get a real-time, continuous assessment of your security posture so you can find and fix vulnerabilities faster.',
-  entityTypes: ['IPv4', 'domain'],
+    'tenable.sc provides the industrys most comprehensive vulnerability coverage with real-time continuous assessment of your network',
+  entityTypes: ['IPv4', 'domain', 'cve'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
@@ -89,8 +89,8 @@ module.exports = {
   options: [
     {
       key: 'url',
-      name: 'Base tenable.sc API URL',
-      description: 'The base URL for the tenable.sc API including the schema (i.e., https://)',
+      name: 'tenable.sc URL',
+      description: 'The base URL for the tenable.sc server including the schema (i.e., https://)',
       type: 'text',
       default: '',
       userCanEdit: false,
@@ -98,7 +98,7 @@ module.exports = {
     },
     {
       key: 'userName',
-      name: 'Valid Username',
+      name: 'tenable.sc Username',
       description: 'Valid tenable.sc Username',
       default: '',
       type: 'text',
@@ -107,12 +107,21 @@ module.exports = {
     },
     {
       key: 'password',
-      name: 'Valid Password',
+      name: 'tenable.sc Password',
       description: 'Valid tenable.sc Password',
       default: '',
       type: 'password',
       userCanEdit: true,
       adminOnly: false
+    },
+    {
+      key: 'maxResults',
+      name: 'Maximum Number of CVE Search Results to Return',
+      description: 'Maximum number of CVE search results to return',
+      default: 50,
+      type: 'number',
+      userCanEdit: false,
+      adminOnly: true
     }
   ]
 };

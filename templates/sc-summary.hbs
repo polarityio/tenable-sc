@@ -1,3 +1,4 @@
+{{! IPv4 and Domain output parsing}}
 {{#if details.response.severityCritical}}
   <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
     <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
@@ -20,5 +21,12 @@
   <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
     <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
     <span class="integration-text-color">Last Scan Date: {{moment-format details.response.lastScan timeZone=timezone}}</span>
+  </span>
+{{/if}}
+{{! CVE output parsing}}
+{{#if details.response.totalRecords}}
+  <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
+    <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+    <span class="integration-text-color">{{details.response.returnedRecords}} of {{details.response.totalRecords}} Total Records Shown</span>
   </span>
 {{/if}}

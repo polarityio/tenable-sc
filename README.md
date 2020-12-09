@@ -1,22 +1,23 @@
-# Polarity Tenable Security Center Integration
+# Polarity tenable.sc Integration
 
-The Polarity Tenable Security Center integration allows Polarity to search the SecurityCenter API to return information about various indicator types.
+The Polarity tenable.sc (formerly Security Center) integration allows Polarity to search the tenable.sc API to return information about various indicator types.
 
 Check out the integration below:
 
 ![tenable-sc](https://user-images.githubusercontent.com/22529325/69921765-59da0680-1463-11ea-8e7e-4d0eb9dc0e31.png)
 
-To learn more about Tenable Security Center, please visit: [official website](https://www.tenable.com/products/tenable-sc/opt?&utm_source=google&utm_medium=cpc&utm_term=tenable%20security%20center&utm_content=390118351109&utm_campaign=amer_en_gs_ENTERPRISE_tenable.io_brand_exact&utm_promoter=tenable-enterprise-brand&gclid=EAIaIQobChMI7LSS7sSV5gIVhonICh2AXwFUEAAYAiAAEgK_vPD_BwE)
+To learn more about tenable.sc, please visit: [official website](https://www.tenable.com/products/tenable-sc)
 
-## Tenable Security Center Integration Options
+## tenable.sc Integration Options
 
-### Tenable Security Center URL
-Base URL for Tenable SC, please ensure to include the schema and any ports if necessary.
-### Tenable Security Center Username
-Tenable SC Username. Please ensure the user has the appropriate access to the API.
+### tenable.sc URL
+Base URL for tenable.sc, please ensure to include the schema and any ports if necessary.
 
-### Tenable Security Center Password
-Password associated with the Tenable SC user.
+### tenable.sc Username
+tenable.sc Username. Please ensure the user has the appropriate access to the API.
+
+### tenable.sc Password
+Valid password associated with the tenable.sc user.
 
 ## Installation Instructions
 
