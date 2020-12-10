@@ -27,6 +27,10 @@
 {{#if details.response.totalRecords}}
   <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
     <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
-    <span class="integration-text-color">{{details.response.returnedRecords}} of {{details.response.totalRecords}} Total Records Shown</span>
+    <span class="integration-text-color">{{details.response.totalRecords}} Total Records Found</span>
+  </span>
+  <span {{on "click" (optional this.scrollToIntegration)}} class="integration-summary-tag integration-background-color integration-border-color">
+    <span class="acronym integration-text-bold-color">{{block.acronym}}</span>
+    <span class="integration-text-color">Critical Severities: {{details.response.criticalSeverityResults.length}}</span>
   </span>
 {{/if}}

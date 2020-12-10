@@ -224,72 +224,72 @@
     <span class="p-title">
       {{fa-icon "desktop" fixedWidth=true}} IP's ({{details.response.totalRecords}} Total Found)
     </span>
-    {{#if details.response.infoSeverityIps.length}}
+    {{#if details.response.infoSeverityResults.length}}
       <div class="toggle-header">
           <span class="p-action" {{action "toggle" "showInfoIps"}}>
               {{fa-icon "info-circle" fixedWidth=true}}
-              <span style="color:blue"><em><b>Informational</b></em></span> Severity IP's ({{details.response.infoSeverityIps.length}} Shown)
+              <span style="color:blue"><em><b>Informational</b></em></span> Severity IP's ({{details.response.infoSeverityResults.length}} Shown)
               {{fa-icon (if showInfoIps "caret-up" "caret-down") fixedWidth=true}}
           </span>
       </div>
       {{#if showInfoIps}}
-          {{#each details.response.infoSeverityIps as |result|}}
+          {{#each details.response.infoSeverityResults as |result|}}
             <span class="section-tag">{{result.ip}}</span>
           {{/each}}
       {{/if}}
     {{/if}}
-    {{#if details.response.lowSeverityIps.length}}
+    {{#if details.response.lowSeverityResults.length}}
       <div class="toggle-header">
           <span class="p-action" {{action "toggle" "showLowIps"}}>
               {{fa-icon "long-arrow-alt-down" fixedWidth=true}}
-              <span style="color:green"><em><b>Low</b></em></span> Severity IP's ({{details.response.lowSeverityIps.length}} Shown)
+              <span style="color:green"><em><b>Low</b></em></span> Severity IP's ({{details.response.lowSeverityResults.length}} Shown)
               {{fa-icon (if showLowIps "caret-up" "caret-down") fixedWidth=true}}
           </span>
       </div>
       {{#if showLowIps}}
-          {{#each details.response.lowSeverityIps as |result|}}
+          {{#each details.response.lowSeverityResults as |result|}}
             <span class="section-tag">{{result.ip}}</span>
           {{/each}}
       {{/if}}
     {{/if}}
-    {{#if details.response.mediumSeverityIps.length}}
+    {{#if details.response.mediumSeverityResults.length}}
       <div class="toggle-header">
           <span class="p-action" {{action "toggle" "showMediumIps"}}>
               {{fa-icon "long-arrow-alt-left" fixedWidth=true}}
-              <span style="color:orange"><em><b>Medium</b></em></span> Severity IP's ({{details.response.mediumSeverityIps.length}} Shown)
+              <span style="color:orange"><em><b>Medium</b></em></span> Severity IP's ({{details.response.mediumSeverityResults.length}} Shown)
               {{fa-icon (if showMediumIps "caret-up" "caret-down") fixedWidth=true}}
           </span>
       </div>
       {{#if showMediumIps}}
-          {{#each details.response.mediumSeverityIps as |result|}}
+          {{#each details.response.mediumSeverityResults as |result|}}
             <span class="section-tag">{{result.ip}}</span>
           {{/each}}
       {{/if}}
     {{/if}}
-    {{#if details.response.highSeverityIps.length}}
+    {{#if details.response.highSeverityResults.length}}
       <div class="toggle-header">
           <span class="p-action" {{action "toggle" "showHighIps"}}>
               {{fa-icon "long-arrow-alt-up" fixedWidth=true}}
-              <span style="color:red"><em><b>High</b></em></span> Severity IP's ({{details.response.highSeverityIps.length}} Shown)
+              <span style="color:red"><em><b>High</b></em></span> Severity IP's ({{details.response.highSeverityResults.length}} Shown)
               {{fa-icon (if showHighIps "caret-up" "caret-down") fixedWidth=true}}
           </span>
       </div>
       {{#if showHighIps}}
-          {{#each details.response.highSeverityIps as |result|}}
+          {{#each details.response.highSeverityResults as |result|}}
             <span class="section-tag">{{result.ip}}</span>
           {{/each}}
       {{/if}}
     {{/if}}
-    {{#if details.response.criticalSeverityIps.length}}
+    {{#if details.response.criticalSeverityResults.length}}
       <div class="toggle-header">
           <span class="p-action" {{action "toggle" "showCriticalIps"}}>
               {{fa-icon "fire-alt" fixedWidth=true}}
-              <span style="color:purple"><em><b>Critical</b></em></span> Severity IP's ({{details.response.criticalSeverityIps.length}} Shown)
+              <span style="color:purple"><em><b>Critical</b></em></span> Severity IP's ({{details.response.criticalSeverityResults.length}} Shown)
               {{fa-icon (if showCriticalIps "caret-up" "caret-down") fixedWidth=true}}
           </span>
       </div>
       {{#if showCriticalIps}}
-          {{#each details.response.criticalSeverityIps as |result|}}
+          {{#each details.response.criticalSeverityResults as |result|}}
             <span class="section-tag">{{result.ip}}</span>
           {{/each}}
       {{/if}}
@@ -307,72 +307,72 @@
     <span class="p-title">
       {{fa-icon "desktop" fixedWidth=true}} DNS Names ({{details.response.totalRecords}} Total Found)
     </span>
-    {{#if details.response.infoSeverityDns.length}}
+    {{#if details.response.infoSeverityResults.length}}
       <div class="toggle-header">
         <span class="p-action" {{action "toggle" "showInfoDns"}}>
           {{fa-icon "info-circle" fixedWidth=true}}
-          <span style="color:blue"><em><b>Informational</b></em></span> Severity DNS ({{details.response.infoSeverityDns.length}} Shown)
+          <span style="color:blue"><em><b>Informational</b></em></span> Severity DNS ({{details.response.infoSeverityResults.length}} Shown)
           {{fa-icon (if showInfoDns "caret-up" "caret-down") fixedWidth=true}}
         </span>
       </div>
       {{#if showInfoDns}}
-        {{#each details.response.infoSeverityDns as |result|}}
+        {{#each details.response.infoSeverityResults as |result|}}
           <span class="section-tag">{{result.dnsName}}</span>
         {{/each}}
       {{/if}}
     {{/if}}
-    {{#if details.response.lowSeverityDns.length}}
+    {{#if details.response.lowSeverityResults.length}}
       <div class="toggle-header">
         <span class="p-action" {{action "toggle" "showLowDns"}}>
           {{fa-icon "long-arrow-alt-down" fixedWidth=true}}
-          <span style="color:green"><em><b>Low</b></em></span> Severity DNS ({{details.response.lowSeverityDns.length}} Shown)
+          <span style="color:green"><em><b>Low</b></em></span> Severity DNS ({{details.response.lowSeverityResults.length}} Shown)
           {{fa-icon (if showLowDns "caret-up" "caret-down") fixedWidth=true}}
         </span>
       </div>
       {{#if showLowDns}}
-        {{#each details.response.lowSeverityDns as |result|}}
+        {{#each details.response.lowSeverityResults as |result|}}
           <span class="section-tag">{{result.dnsName}}</span>
         {{/each}}
       {{/if}}
     {{/if}}
-    {{#if details.response.mediumSeverityDns.length}}
+    {{#if details.response.mediumSeverityResults.length}}
       <div class="toggle-header">
         <span class="p-action" {{action "toggle" "showMediumDns"}}>
           {{fa-icon "long-arrow-alt-left" fixedWidth=true}}
-          <span style="color:orange"><em><b>Medium</b></em></span> Severity DNS ({{details.response.mediumSeverityDns.length}} Shown)
+          <span style="color:orange"><em><b>Medium</b></em></span> Severity DNS ({{details.response.mediumSeverityResults.length}} Shown)
           {{fa-icon (if showMediumDns "caret-up" "caret-down") fixedWidth=true}}
         </span>
       </div>
       {{#if showMediumDns}}
-        {{#each details.response.mediumSeverityDns as |result|}}
+        {{#each details.response.mediumSeverityResults as |result|}}
           <span class="section-tag">{{result.dnsName}}</span>
         {{/each}}
       {{/if}}
     {{/if}}
-    {{#if details.response.highSeverityDns.length}}
+    {{#if details.response.highSeverityResults.length}}
       <div class="toggle-header">
         <span class="p-action" {{action "toggle" "showHighDns"}}>
           {{fa-icon "long-arrow-alt-up" fixedWidth=true}}
-          <span style="color:red"><em><b>High</b></em></span> Severity DNS ({{details.response.highSeverityDns.length}} Shown)
+          <span style="color:red"><em><b>High</b></em></span> Severity DNS ({{details.response.highSeverityResults.length}} Shown)
           {{fa-icon (if showHighDns "caret-up" "caret-down") fixedWidth=true}}
         </span>
       </div>
       {{#if showHighDns}}
-        {{#each details.response.highSeverityDns as |result|}}
+        {{#each details.response.highSeverityResults as |result|}}
           <span class="section-tag">{{result.dnsName}}</span>
         {{/each}}
       {{/if}}
     {{/if}}
-    {{#if details.response.criticalSeverityDns.length}}
+    {{#if details.response.criticalSeverityResults.length}}
       <div class="toggle-header">
         <span class="p-action" {{action "toggle" "showCriticalDns"}}>
           {{fa-icon "fire-alt" fixedWidth=true}}
-          <span style="color:purple"><em><b>Critical</b></em></span> Severity DNS ({{details.response.criticalSeverityDns.length}} Shown)
+          <span style="color:purple"><em><b>Critical</b></em></span> Severity DNS ({{details.response.criticalSeverityResults.length}} Shown)
           {{fa-icon (if showCriticalDns "caret-up" "caret-down") fixedWidth=true}}
         </span>
       </div>
       {{#if showCriticalDns}}
-        {{#each details.response.criticalSeverityDns as |result|}}
+        {{#each details.response.criticalSeverityResults as |result|}}
           <span class="section-tag">{{result.dnsName}}</span>
         {{/each}}
       {{/if}}

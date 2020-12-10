@@ -206,12 +206,11 @@ function doLookup(entities, options, cb) {
             data: null
           });
         } else {
-
           lookupResults.push({
             entity,
             data: {
               summary: [],
-              details: getFormattedDetails(body, options, entity);
+              details: getFormattedDetails(body, options, entity)
             }
           });
         }
@@ -225,37 +224,24 @@ function doLookup(entities, options, cb) {
 
 const _isMiss = (body) => !body || !body.response;
 
-const getFormattedDetails = (body, options, entity) => {
-  const infoResults = getSeverityResults('0', body);
-  const lowResults = getSeverityResults('1', body);
-  const mediumResults = getSeverityResults('2', body);
-  const highResults = getSeverityResults('3', body);
-  const criticalResults = getSeverityResults('4', body);
-
-  return {
-    ...body,
-    ...(!entity.isIPv4 && {
-      IpDetailsUrl:
-        `${options.url}/#vulnerabilities/cumulative/sumip/` +
-        `%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22ip%22%2C%22value%22%3A%20%22${entity.value}%22%7D%5D%7D`
-    }),
-    response: {
-      ...body.response,
-      infoSeverityIps: infoResults,
-      infoSeverityDns: infoResults,
-      lowSeverityIps: lowResults,
-      lowSeverityDns: lowResults,
-      mediumSeverityIps: mediumResults,
-      mediumSeverityDns: mediumResults,
-      highSeverityIps: highResults,
-      highSeverityDns: highResults,
-      criticalSeverityIps: criticalResults,
-      criticalSeverityDns: criticalResults,
-      lastScan: new Date(parseInt(body.response.lastScan) * 1000),
-      lastAuthRun: new Date(parseInt(body.response.lastAuthRun) * 1000)
-    }
-  };
-}
+const getFormattedDetails = (body, options, entity) => ({
+  ...body,
+  ...(!entity.isIPv4 && {
+    IpDetailsUrl:
+      `${options.url}/#vulnerabilities/cumulative/sumip/` +
+      `%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22ip%22%2C%22value%22%3A%20%22${entity.value}%22%7D%5D%7D`
+  }),
+  response: {
+    ...body.response,
+    infoSeverityResults: getSeverityResults('0', body),
+    lowSeverityResults: getSeverityResults('1', body),
+    mediumSeverityResults: getSeverityResults('2', body),
+    highSeverityResults: getSeverityResults('3', body),
+    criticalSeverityResults: getSeverityResults('4', body),
+    lastScan: new Date(parseInt(body.response.lastScan) * 1000),
+    lastAuthRun: new Date(parseInt(body.response.lastAuthRun) * 1000)
+  }
+});
 
 const getSeverityResults = (severityId, body) =>
   fp.filter(fp.flow(fp.get('severity.id'), fp.eq(severityId)), fp.get('response.results', body));
