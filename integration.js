@@ -2,6 +2,7 @@
 
 const request = require('request');
 const _ = require('lodash');
+const fp = require('lodash/fp');
 const config = require('./config/config');
 const async = require('async');
 const fs = require('fs');
@@ -205,22 +206,12 @@ function doLookup(entities, options, cb) {
             data: null
           });
         } else {
-          body.response.lastScan = new Date(parseInt(body.response.lastScan) * 1000);
-          body.response.lastAuthRun = new Date(parseInt(body.response.lastAuthRun) * 1000);
-          const details = !entity.isIPv4
-            ? body
-            : {
-                ...body,
-                IpDetailsUrl:
-                  `${options.url}/#vulnerabilities/cumulative/sumip/` +
-                  `%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22ip%22%2C%22value%22%3A%20%22${entity.value}%22%7D%5D%7D`
-              };
 
           lookupResults.push({
             entity,
             data: {
               summary: [],
-              details
+              details: getFormattedDetails(body, options, entity);
             }
           });
         }
@@ -233,6 +224,41 @@ function doLookup(entities, options, cb) {
 }
 
 const _isMiss = (body) => !body || !body.response;
+
+const getFormattedDetails = (body, options, entity) => {
+  const infoResults = getSeverityResults('0', body);
+  const lowResults = getSeverityResults('1', body);
+  const mediumResults = getSeverityResults('2', body);
+  const highResults = getSeverityResults('3', body);
+  const criticalResults = getSeverityResults('4', body);
+
+  return {
+    ...body,
+    ...(!entity.isIPv4 && {
+      IpDetailsUrl:
+        `${options.url}/#vulnerabilities/cumulative/sumip/` +
+        `%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22ip%22%2C%22value%22%3A%20%22${entity.value}%22%7D%5D%7D`
+    }),
+    response: {
+      ...body.response,
+      infoSeverityIps: infoResults,
+      infoSeverityDns: infoResults,
+      lowSeverityIps: lowResults,
+      lowSeverityDns: lowResults,
+      mediumSeverityIps: mediumResults,
+      mediumSeverityDns: mediumResults,
+      highSeverityIps: highResults,
+      highSeverityDns: highResults,
+      criticalSeverityIps: criticalResults,
+      criticalSeverityDns: criticalResults,
+      lastScan: new Date(parseInt(body.response.lastScan) * 1000),
+      lastAuthRun: new Date(parseInt(body.response.lastAuthRun) * 1000)
+    }
+  };
+}
+
+const getSeverityResults = (severityId, body) =>
+  fp.filter(fp.flow(fp.get('severity.id'), fp.eq(severityId)), fp.get('response.results', body));
 
 function validateStringOption(errors, options, optionName, errMessage) {
   if (

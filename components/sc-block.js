@@ -3,30 +3,23 @@ polarity.export = PolarityComponent.extend({
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
-  showIps: false,
-  showNames: false,
   numIpsShown: 0,
   numNamesShown: 0,
-
   init() {
     this.set(
       'numIpsShown',
-      Math.min(this.get('details.response.returnedRecords'), this.get('details.response.totalRecords')),
+      Math.min(this.get('details.response.returnedRecords'), this.get('details.response.totalRecords'))
     );
     this.set(
       'numNamesShown',
-      Math.min(this.get('details.response.returnedRecords'), this.get('details.response.totalRecords')),
+      Math.min(this.get('details.response.returnedRecords'), this.get('details.response.totalRecords'))
     );
 
     this._super(...arguments);
   },
   actions: {
-    toggleShowIps: function () {
-      this.toggleProperty(`showIps`);
-      this.get('block').notifyPropertyChange('data');
-    },
-    toggleShowNames: function () {
-      this.toggleProperty(`showNames`);
+    toggle: function (prop) {
+      this.toggleProperty(prop);
       this.get('block').notifyPropertyChange('data');
     }
   }

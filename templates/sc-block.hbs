@@ -1,204 +1,177 @@
 {{! IPv4 and Domain output parsing}}
-  {{#if details.response.score}}
+{{#if details.response.score}}
+  <div>
+    <span class="p-key">Tenable Score:</span>
+    <span class="p-value">{{details.response.score}}</span>
+  </div>
+{{/if}}
+{{#if details.response.total}}
+  <h1 class="p-title">
+      {{fa-icon "exclamation" fixedWidth=true}}  Severity Levels
+  </h1>
+  {{#if (eq block.entity.type "domain")}}
     <div>
-      <span class="p-key">Tenable Score:</span>
-      <span class="p-value">{{details.response.score}}</span>
+      <span style="color:black" class="p-key"><b>Total</b> Number of Vulnerabilities:</span>
+      <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22dnsName%22%2C%22value%22%3A%20%22{{block.entity.value}}%22%7D%5D%7D">{{details.response.total}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+    </div>
+  {{else}}
+    <div>
+      <span style="color:black" class="p-key"><b>Total</b> Number of Vulnerabilities:</span>
+      <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22ip%22%2C%22value%22%3A%20%22{{block.entity.value}}%22%7D%5D%7D">{{details.response.total}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
     </div>
   {{/if}}
-  {{#if details.response.total}}
-    <h1 class="p-title">
-        {{fa-icon "exclamation" fixedWidth=true}}  Severity Levels
-    </h1>
-    {{#if (eq block.entity.type "domain")}}
-      <div>
-        <span style="color:black" class="p-key"><b>Total</b> Number of Vulnerabilities:</span>
-        <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22dnsName%22%2C%22value%22%3A%20%22{{block.entity.value}}%22%7D%5D%7D">{{details.response.total}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-      </div>
-    {{else}}
-      <div>
-        <span style="color:black" class="p-key"><b>Total</b> Number of Vulnerabilities:</span>
-        <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%20%5B%7B%22filterName%22%3A%20%22ip%22%2C%22value%22%3A%20%22{{block.entity.value}}%22%7D%5D%7D">{{details.response.total}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-      </div>
-    {{/if}}
-  {{/if}}
-  {{#if details.response.severityInfo}}
-    {{#if (eq block.entity.type "domain")}}
-      <div>
-        <span class="p-key">Number of <span style="color:blue"><b>Informational</b></span> Severities:</span>
-        <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22dnsName%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%220%22%7D%5D%7D%0A">{{details.response.severityInfo}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-      </div>
-    {{else}}
-      <div>
-        <span class="p-key">Number of <span style="color:blue"><b>Informational</b></span> Severities:</span>
-        <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22ip%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%220%22%7D%5D%7D%0A">{{details.response.severityInfo}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-      </div>
-    {{/if}}
-  {{/if}}
-  {{#if details.response.severityLow}}
-    {{#if (eq block.entity.type "domain")}}
-      <div>
-        <span class="p-key">Number of <span style="color:green"><b>Low</b></span> Severities:</span>
-        <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22dnsName%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%221%22%7D%5D%7D%0A">{{details.response.severityLow}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-      </div>
-    {{else}}
-      <div>
-        <span class="p-key">Number of <span style="color:green"><b>Low</b></span> Severities:</span>
-        <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22ip%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%221%22%7D%5D%7D%0A">{{details.response.severityLow}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-      </div>
-    {{/if}}
-  {{/if}}
-  {{#if details.response.severityMedium}}
-    {{#if (eq block.entity.type "domain")}}
-      <div>
-        <span class="p-key">Number of <span style="color:orange"><b>Medium</b></span> Severities:</span>
-        <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22dnsName%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%222%22%7D%5D%7D%0A">{{details.response.severityMedium}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-      </div>
-    {{else}}
-      <div>
-        <span class="p-key">Number of <span style="color:orange"><b>Medium</b></span> Severities:</span>
-        <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22ip%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%222%22%7D%5D%7D%0A">{{details.response.severityMedium}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-      </div>
-    {{/if}}
-  {{/if}}
-  {{#if details.response.severityHigh}}
-    {{#if (eq block.entity.type "domain")}}
-      <div>
-        <span class="p-key">Number of <span style="color:red"><b>High</b></span> Severities:</span>
-        <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22dnsName%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%223%22%7D%5D%7D%0A">{{details.response.severityHigh}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-      </div>
-    {{else}}
-      <div>
-        <span class="p-key">Number of <span style="color:red"><b>High</b></span> Severities:</span>
-        <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22ip%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%223%22%7D%5D%7D%0A">{{details.response.severityHigh}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-      </div>
-    {{/if}}
-  {{/if}}
-  {{#if details.response.severityCritical}}
-    {{#if (eq block.entity.type "domain")}}
-      <div>
-        <span class="p-key">Number of <span style="color:purple"><b>Critical</b></span> Severities:</span>
-        <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22dnsName%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%224%22%7D%5D%7D%0A">{{details.response.severityCritical}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-      </div>
-    {{else}}
-      <div>
-        <span class="p-key">Number of <span style="color:purple"><b>Critical</b></span> Severities:</span>
-        <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22ip%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%224%22%7D%5D%7D%0A">{{details.response.severityCritical}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
-      </div>
-    {{/if}}
-  {{/if}}
-  {{#if details.response.macAddress}}
+{{/if}}
+{{#if details.response.severityInfo}}
+  {{#if (eq block.entity.type "domain")}}
     <div>
-        <span class="p-title">{{fa-icon "laptop" fixedWidth=true}} Device Information </span>
+      <span class="p-key">Number of <span style="color:blue"><b>Informational</b></span> Severities:</span>
+      <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22dnsName%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%220%22%7D%5D%7D%0A">{{details.response.severityInfo}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
     </div>
+  {{else}}
     <div>
-      <span class="p-key">MAC Address:</span>
-      <span class="p-value">{{details.response.macAddress}}</span>
+      <span class="p-key">Number of <span style="color:blue"><b>Informational</b></span> Severities:</span>
+      <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22ip%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%220%22%7D%5D%7D%0A">{{details.response.severityInfo}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
     </div>
   {{/if}}
-  {{#if details.response.netbiosName}}
+{{/if}}
+{{#if details.response.severityLow}}
+  {{#if (eq block.entity.type "domain")}}
     <div>
-      <span class="p-key">NetBIOS Name:</span>
-      <span class="p-value">{{details.response.netbiosName}}</span>
+      <span class="p-key">Number of <span style="color:green"><b>Low</b></span> Severities:</span>
+      <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22dnsName%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%221%22%7D%5D%7D%0A">{{details.response.severityLow}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+    </div>
+  {{else}}
+    <div>
+      <span class="p-key">Number of <span style="color:green"><b>Low</b></span> Severities:</span>
+      <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22ip%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%221%22%7D%5D%7D%0A">{{details.response.severityLow}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
     </div>
   {{/if}}
-  {{#if details.response.os}}
+{{/if}}
+{{#if details.response.severityMedium}}
+  {{#if (eq block.entity.type "domain")}}
     <div>
-      <span class="p-key">Operating System:</span>
-      <span class="p-value">{{details.response.os}}</span>
+      <span class="p-key">Number of <span style="color:orange"><b>Medium</b></span> Severities:</span>
+      <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22dnsName%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%222%22%7D%5D%7D%0A">{{details.response.severityMedium}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+    </div>
+  {{else}}
+    <div>
+      <span class="p-key">Number of <span style="color:orange"><b>Medium</b></span> Severities:</span>
+      <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22ip%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%222%22%7D%5D%7D%0A">{{details.response.severityMedium}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
     </div>
   {{/if}}
-  {{#if details.response.dnsName}}
+{{/if}}
+{{#if details.response.severityHigh}}
+  {{#if (eq block.entity.type "domain")}}
     <div>
-      <span class="p-key">DNS Name:</span>
-      <span class="p-value">{{details.response.dnsName}}</span>
+      <span class="p-key">Number of <span style="color:red"><b>High</b></span> Severities:</span>
+      <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22dnsName%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%223%22%7D%5D%7D%0A">{{details.response.severityHigh}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+    </div>
+  {{else}}
+    <div>
+      <span class="p-key">Number of <span style="color:red"><b>High</b></span> Severities:</span>
+      <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22ip%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%223%22%7D%5D%7D%0A">{{details.response.severityHigh}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
     </div>
   {{/if}}
-  {{#if details.response.osCPE}}
+{{/if}}
+{{#if details.response.severityCritical}}
+  {{#if (eq block.entity.type "domain")}}
     <div>
-      <span class="p-key">CPE Name:</span>
-      <span class="p-value">{{details.response.osCPE}}</span>
+      <span class="p-key">Number of <span style="color:purple"><b>Critical</b></span> Severities:</span>
+      <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22dnsName%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%224%22%7D%5D%7D%0A">{{details.response.severityCritical}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
+    </div>
+  {{else}}
+    <div>
+      <span class="p-key">Number of <span style="color:purple"><b>Critical</b></span> Severities:</span>
+      <span class="p-value"><a href="{{block.userOptions.url}}/#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22filterName%22%3A%22ip%22%2C%22value%22%3A%22{{block.entity.value}}%22%7D%2C%7B%22filterName%22%3A%22severity%22%2C%22value%22%3A%224%22%7D%5D%7D%0A">{{details.response.severityCritical}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></span>
     </div>
   {{/if}}
-  {{#if details.response.policyName}}
-    <div>
-      <span class="p-key">Policy Name:</span>
-      <span class="p-value">{{details.response.policyName}}</span>
-    </div>
-  {{/if}}
-  {{#if details.response.lastScan}}
-    <div>
-        <span class="p-title">{{fa-icon "redo" fixedWidth=true}} Information from Last Scan </span>
-    </div>
-    <div>
-      <span class="p-key">Last Scan Date:</span>
-      <span class="p-value">{{moment-format details.response.lastScan timeZone=timezone}}</span>
-    </div>
-  {{/if}}
-  {{#if details.response.lastAuthRun}}
-    <div>
-      <span class="p-key">Last Auth Run:</span>
-      <span class="p-value">{{mdetails.response.lastAuthRun timeZone=timezone}}</span>
-    </div>
-  {{/if}}
-  {{#if details.response.hasPassive}}
-    <div>
-      <span class="p-key">Has Passive:</span>
-      <span class="p-value">{{details.response.hasPassive}}</span>
-    </div>
-  {{/if}}
-  {{#if details.response.hasCompliance}}
-    <div>
-      <span class="p-key">Has Compliance:</span>
-      <span class="p-value">{{details.response.hasCompliance}}</span>
-    </div>
-  {{/if}}
-  {{#if details.response.repositories}}
-    <div>
-        <span class="p-title">{{fa-icon "database" fixedWidth=true}} Repository Information </span>
-    </div>
-    <div>
-        {{#each details.response.repositories as |repo|}}
-            {{#if repo.name}}
-            <span class="p-key">Name of Repository:</span>
-            <span class="p-value">{{repo.name}}</span>
-            {{/if}}
-            {{#if repo.description}}
-            <span class="p-key">Description of Repository:</span>
-            <span class="p-value">{{repo.description}}</span>
-            {{/if}}
-        {{/each}}
-    </div>
+{{/if}}
+{{#if details.response.macAddress}}
+  <div>
+      <span class="p-title">{{fa-icon "laptop" fixedWidth=true}} Device Information </span>
+  </div>
+  <div>
+    <span class="p-key">MAC Address:</span>
+    <span class="p-value">{{details.response.macAddress}}</span>
+  </div>
+{{/if}}
+{{#if details.response.netbiosName}}
+  <div>
+    <span class="p-key">NetBIOS Name:</span>
+    <span class="p-value">{{details.response.netbiosName}}</span>
+  </div>
+{{/if}}
+{{#if details.response.os}}
+  <div>
+    <span class="p-key">Operating System:</span>
+    <span class="p-value">{{details.response.os}}</span>
+  </div>
+{{/if}}
+{{#if details.response.dnsName}}
+  <div>
+    <span class="p-key">DNS Name:</span>
+    <span class="p-value">{{details.response.dnsName}}</span>
+  </div>
+{{/if}}
+{{#if details.response.osCPE}}
+  <div>
+    <span class="p-key">CPE Name:</span>
+    <span class="p-value">{{details.response.osCPE}}</span>
+  </div>
+{{/if}}
+{{#if details.response.policyName}}
+  <div>
+    <span class="p-key">Policy Name:</span>
+    <span class="p-value">{{details.response.policyName}}</span>
+  </div>
+{{/if}}
+{{#if details.response.lastScan}}
+  <div>
+      <span class="p-title">{{fa-icon "redo" fixedWidth=true}} Information from Last Scan </span>
+  </div>
+  <div>
+    <span class="p-key">Last Scan Date:</span>
+    <span class="p-value">{{moment-format details.response.lastScan timeZone=timezone}}</span>
+  </div>
+{{/if}}
+{{#if details.response.lastAuthRun}}
+  <div>
+    <span class="p-key">Last Auth Run:</span>
+    <span class="p-value">{{mdetails.response.lastAuthRun timeZone=timezone}}</span>
+  </div>
+{{/if}}
+{{#if details.response.hasPassive}}
+  <div>
+    <span class="p-key">Has Passive:</span>
+    <span class="p-value">{{details.response.hasPassive}}</span>
+  </div>
+{{/if}}
+{{#if details.response.hasCompliance}}
+  <div>
+    <span class="p-key">Has Compliance:</span>
+    <span class="p-value">{{details.response.hasCompliance}}</span>
+  </div>
+{{/if}}
+{{#if details.response.repositories}}
+  <div>
+      <span class="p-title">{{fa-icon "database" fixedWidth=true}} Repository Information </span>
+  </div>
+  <div>
+      {{#each details.response.repositories as |repo|}}
+          {{#if repo.name}}
+          <span class="p-key">Name of Repository:</span>
+          <span class="p-value">{{repo.name}}</span>
+          {{/if}}
+          {{#if repo.description}}
+          <span class="p-key">Description of Repository:</span>
+          <span class="p-value">{{repo.description}}</span>
+          {{/if}}
+      {{/each}}
+  </div>
 {{/if}}
 
 {{! CVE output parsing}}
 {{#if details.response.results}}
-  {{#if details.response.results.0.severity.name}}
-    {{#if (eq details.response.results.0.severity.name "Info")}}
-      <div>
-        <span class="p-key"><span style="color:blue"><b>Informational</b></span> Severity</span>
-      </div>
-    {{/if}}
-    {{#if (eq details.response.results.0.severity.name "Low")}}
-      <div>
-        <span class="p-key"><span style="color:green"><b>Low</b></span> Severity</span>
-      </div>
-    {{/if}}
-    {{#if (eq details.response.results.0.severity.name "Medium")}}
-      <div>
-        <span class="p-key"><span style="color:orange"><b>Medium</b></span> Severity</span>
-      </div>
-    {{/if}}
-    {{#if (eq details.response.results.0.severity.name "High")}}
-      <div>
-        <span class="p-key"><span style="color:red"><b>High</b></span> Severity</span>
-      </div>
-    {{/if}}
-    {{#if (eq details.response.results.0.severity.name "Critical")}}
-      <div>
-        <span class="p-key"><span style="color:purple"><b>Critical</b></span> Severity</span>
-      </div>
-    {{/if}}
-  {{/if}}
   <div>
     <span class="p-key">CVE ID: </span>
     <a href="{{block.userOptions.url}}/?#vulnerabilities/cumulative/listvuln/%7B%22filt%22%3A%5B%7B%22id%22%3A%22cveID%22%2C%22filterName%22%3A%22cveID%22%2C%22operator%22%3A%22%3D%22%2C%22type%22%3A%22vuln%22%2C%22isPredefined%22%3Atrue%2C%22value%22%3A%22{{block.entity.value}}%22%7D%5D%2C%22sortCol%22%3A%22none%22%2C%22sortDir%22%3A%22desc%22%7D/1/0" class="p-link">{{block.entity.value}} {{fa-icon "external-link-square" class="external-link-icon"}}</a>
@@ -239,41 +212,171 @@
         <span class="p-value">{{details.response.results.0.repository.name}}</span>
     </div>
   {{/if}}
+
   {{#if (eq numIpsShown 0)}}
-      <div>
-          <span class="p-title">{{fa-icon "clone" fixedWidth=true}} No IPs Found</span>
-      </div>
+    <span class="p-title">
+      {{fa-icon "desktop" fixedWidth=true}} IP's ({{details.response.totalRecords}} Total Found)
+    </span>
+    <div>
+      <span class="p-title">{{fa-icon "clone" fixedWidth=true}} No IP's Found</span>
+    </div>
   {{else}}
+    <span class="p-title">
+      {{fa-icon "desktop" fixedWidth=true}} IP's ({{details.response.totalRecords}} Total Found)
+    </span>
+    {{#if details.response.infoSeverityIps.length}}
       <div class="toggle-header">
-          <span class="p-action" {{action "toggleShowIps"}}>
-              {{fa-icon "desktop" fixedWidth=true}}
-              IP's ({{numIpsShown}} of {{details.response.totalRecords}} Total)
-              {{fa-icon (if showIps "caret-up" "caret-down") fixedWidth=true}}
+          <span class="p-action" {{action "toggle" "showInfoIps"}}>
+              {{fa-icon "info-circle" fixedWidth=true}}
+              <span style="color:blue"><em><b>Informational</b></em></span> Severity IP's ({{details.response.infoSeverityIps.length}} Shown)
+              {{fa-icon (if showInfoIps "caret-up" "caret-down") fixedWidth=true}}
           </span>
       </div>
-      {{#if showIps}}
-          {{#each (limit details.response.results numIpsShown) as |result|}}
-             <span class="section-tag">{{result.ip}}</span>
+      {{#if showInfoIps}}
+          {{#each details.response.infoSeverityIps as |result|}}
+            <span class="section-tag">{{result.ip}}</span>
           {{/each}}
       {{/if}}
+    {{/if}}
+    {{#if details.response.lowSeverityIps.length}}
+      <div class="toggle-header">
+          <span class="p-action" {{action "toggle" "showLowIps"}}>
+              {{fa-icon "long-arrow-alt-down" fixedWidth=true}}
+              <span style="color:green"><em><b>Low</b></em></span> Severity IP's ({{details.response.lowSeverityIps.length}} Shown)
+              {{fa-icon (if showLowIps "caret-up" "caret-down") fixedWidth=true}}
+          </span>
+      </div>
+      {{#if showLowIps}}
+          {{#each details.response.lowSeverityIps as |result|}}
+            <span class="section-tag">{{result.ip}}</span>
+          {{/each}}
+      {{/if}}
+    {{/if}}
+    {{#if details.response.mediumSeverityIps.length}}
+      <div class="toggle-header">
+          <span class="p-action" {{action "toggle" "showMediumIps"}}>
+              {{fa-icon "long-arrow-alt-left" fixedWidth=true}}
+              <span style="color:orange"><em><b>Medium</b></em></span> Severity IP's ({{details.response.mediumSeverityIps.length}} Shown)
+              {{fa-icon (if showMediumIps "caret-up" "caret-down") fixedWidth=true}}
+          </span>
+      </div>
+      {{#if showMediumIps}}
+          {{#each details.response.mediumSeverityIps as |result|}}
+            <span class="section-tag">{{result.ip}}</span>
+          {{/each}}
+      {{/if}}
+    {{/if}}
+    {{#if details.response.highSeverityIps.length}}
+      <div class="toggle-header">
+          <span class="p-action" {{action "toggle" "showHighIps"}}>
+              {{fa-icon "long-arrow-alt-up" fixedWidth=true}}
+              <span style="color:red"><em><b>High</b></em></span> Severity IP's ({{details.response.highSeverityIps.length}} Shown)
+              {{fa-icon (if showHighIps "caret-up" "caret-down") fixedWidth=true}}
+          </span>
+      </div>
+      {{#if showHighIps}}
+          {{#each details.response.highSeverityIps as |result|}}
+            <span class="section-tag">{{result.ip}}</span>
+          {{/each}}
+      {{/if}}
+    {{/if}}
+    {{#if details.response.criticalSeverityIps.length}}
+      <div class="toggle-header">
+          <span class="p-action" {{action "toggle" "showCriticalIps"}}>
+              {{fa-icon "fire-alt" fixedWidth=true}}
+              <span style="color:purple"><em><b>Critical</b></em></span> Severity IP's ({{details.response.criticalSeverityIps.length}} Shown)
+              {{fa-icon (if showCriticalIps "caret-up" "caret-down") fixedWidth=true}}
+          </span>
+      </div>
+      {{#if showCriticalIps}}
+          {{#each details.response.criticalSeverityIps as |result|}}
+            <span class="section-tag">{{result.ip}}</span>
+          {{/each}}
+      {{/if}}
+    {{/if}}
   {{/if}}
+
   {{#if (eq numNamesShown 0)}}
-      <div>
-          <span class="p-title">{{fa-icon "clone" fixedWidth=true}} No DNS Names Found</span>
-      </div>
+    <span class="p-title">
+      {{fa-icon "desktop" fixedWidth=true}} DNS Names  ({{details.response.totalRecords}} Total Found)
+    </span>
+    <div>
+      <span class="p-title">{{fa-icon "clone" fixedWidth=true}} No DNS Names Found</span>
+    </div>
   {{else}}
+    <span class="p-title">
+      {{fa-icon "desktop" fixedWidth=true}} DNS Names ({{details.response.totalRecords}} Total Found)
+    </span>
+    {{#if details.response.infoSeverityDns.length}}
       <div class="toggle-header">
-          <span class="p-action" {{action "toggleShowNames"}}>
-              {{fa-icon "desktop" fixedWidth=true}}
-              DNS Names ({{numNamesShown}} of {{details.response.totalRecords}} Total)
-              {{fa-icon (if showNames "caret-up" "caret-down") fixedWidth=true}}
-          </span>
+        <span class="p-action" {{action "toggle" "showInfoDns"}}>
+          {{fa-icon "info-circle" fixedWidth=true}}
+          <span style="color:blue"><em><b>Informational</b></em></span> Severity DNS ({{details.response.infoSeverityDns.length}} Shown)
+          {{fa-icon (if showInfoDns "caret-up" "caret-down") fixedWidth=true}}
+        </span>
       </div>
-      {{#if showNames}}
-          {{#each (limit details.response.results numNamesShown) as |result|}}
-             <span class="section-tag">{{result.dnsName}}</span>
-          {{/each}}
+      {{#if showInfoDns}}
+        {{#each details.response.infoSeverityDns as |result|}}
+          <span class="section-tag">{{result.dnsName}}</span>
+        {{/each}}
       {{/if}}
+    {{/if}}
+    {{#if details.response.lowSeverityDns.length}}
+      <div class="toggle-header">
+        <span class="p-action" {{action "toggle" "showLowDns"}}>
+          {{fa-icon "long-arrow-alt-down" fixedWidth=true}}
+          <span style="color:green"><em><b>Low</b></em></span> Severity DNS ({{details.response.lowSeverityDns.length}} Shown)
+          {{fa-icon (if showLowDns "caret-up" "caret-down") fixedWidth=true}}
+        </span>
+      </div>
+      {{#if showLowDns}}
+        {{#each details.response.lowSeverityDns as |result|}}
+          <span class="section-tag">{{result.dnsName}}</span>
+        {{/each}}
+      {{/if}}
+    {{/if}}
+    {{#if details.response.mediumSeverityDns.length}}
+      <div class="toggle-header">
+        <span class="p-action" {{action "toggle" "showMediumDns"}}>
+          {{fa-icon "long-arrow-alt-left" fixedWidth=true}}
+          <span style="color:orange"><em><b>Medium</b></em></span> Severity DNS ({{details.response.mediumSeverityDns.length}} Shown)
+          {{fa-icon (if showMediumDns "caret-up" "caret-down") fixedWidth=true}}
+        </span>
+      </div>
+      {{#if showMediumDns}}
+        {{#each details.response.mediumSeverityDns as |result|}}
+          <span class="section-tag">{{result.dnsName}}</span>
+        {{/each}}
+      {{/if}}
+    {{/if}}
+    {{#if details.response.highSeverityDns.length}}
+      <div class="toggle-header">
+        <span class="p-action" {{action "toggle" "showHighDns"}}>
+          {{fa-icon "long-arrow-alt-up" fixedWidth=true}}
+          <span style="color:red"><em><b>High</b></em></span> Severity DNS ({{details.response.highSeverityDns.length}} Shown)
+          {{fa-icon (if showHighDns "caret-up" "caret-down") fixedWidth=true}}
+        </span>
+      </div>
+      {{#if showHighDns}}
+        {{#each details.response.highSeverityDns as |result|}}
+          <span class="section-tag">{{result.dnsName}}</span>
+        {{/each}}
+      {{/if}}
+    {{/if}}
+    {{#if details.response.criticalSeverityDns.length}}
+      <div class="toggle-header">
+        <span class="p-action" {{action "toggle" "showCriticalDns"}}>
+          {{fa-icon "fire-alt" fixedWidth=true}}
+          <span style="color:purple"><em><b>Critical</b></em></span> Severity DNS ({{details.response.criticalSeverityDns.length}} Shown)
+          {{fa-icon (if showCriticalDns "caret-up" "caret-down") fixedWidth=true}}
+        </span>
+      </div>
+      {{#if showCriticalDns}}
+        {{#each details.response.criticalSeverityDns as |result|}}
+          <span class="section-tag">{{result.dnsName}}</span>
+        {{/each}}
+      {{/if}}
+    {{/if}}
   {{/if}}
 
 {{/if}}
