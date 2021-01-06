@@ -4,7 +4,16 @@ The Polarity tenable.sc (formerly Security Center) integration allows Polarity t
 
 Check out the integration below:
 
-![tenable-sc](https://user-images.githubusercontent.com/22529325/69921765-59da0680-1463-11ea-8e7e-4d0eb9dc0e31.png)
+## IP Searching
+<div style="display:flex; justify-content: flex-start; align-items:flex-start;">
+  <img width="400" alt="Integration Example New Incident Created" src="./assets/ip-results.png">
+</div>
+
+## CVE Searching
+<div style="display:flex; justify-content: flex-start; align-items:flex-start;">
+  <img width="400" alt="Integration Example New Incident" src="./assets/cve-results.png">
+  <img width="400" alt="Integration Example New Incident Created" src="./assets/cve-results-expanded.png">
+</div>
 
 To learn more about tenable.sc, please visit: [official website](https://www.tenable.com/products/tenable-sc)
 

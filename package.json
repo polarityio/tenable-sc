@@ -1,7 +1,7 @@
 {
   "main": "./integration.js",
   "name": "TenableSC",
-  "version": "3.0.7-beta",
+  "version": "3.0.8-beta",
   "private": true,
   "dependencies": {
     "async": "^2.6",
