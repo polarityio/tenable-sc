@@ -16,6 +16,7 @@ module.exports = {
    * @required
    */
   acronym: 'SC',
+  defaultColor: 'dark-orange',
   /**
    * Description for this integration which is displayed in the Polarity integrations user interface
    *
