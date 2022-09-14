@@ -1,6 +1,6 @@
 'use strict';
 
-const request = require('request');
+const request = require('postman-request');
 const _ = require('lodash');
 const fp = require('lodash/fp');
 const config = require('./config/config');
@@ -70,11 +70,15 @@ function getAuthToken({ url: tenableScUrl, userName, password, ...options }, cal
         username: userName,
         password
       },
-      json: true
+      json: true,
+      timeout: 30000
     },
     (err, resp, body) => {
       if (err) {
-        callback(err);
+        callback({
+          detail: err.code ? `Network Error: ${err.code}` : 'Network error encountered',
+          err
+        });
         return;
       }
 
@@ -88,7 +92,7 @@ function getAuthToken({ url: tenableScUrl, userName, password, ...options }, cal
       let cookie = resp.headers['set-cookie'][1];
 
       if (typeof cookie === undefined) {
-        callback({ err: new Error('Cookie Not Avilable'), body });
+        callback({ err: new Error('Cookie Not Available'), body });
         return;
       }
 
@@ -109,18 +113,21 @@ function doLookup(entities, options, cb) {
 
   getAuthToken(options, (err, token) => {
     if (err) {
-      Logger.error('get token errored', err);
+      Logger.error(err, 'Error getting auth token');
+      cb({
+        detail: err.detail ? err.detail : 'Unable to authenticate to Tenable',
+        err
+      });
       return;
     }
 
     Logger.trace({ token }, 'what does the token look like in doLookup');
 
     let { cookie } = token;
+    let cookieJar = request.jar();
+    cookieJar.setCookieSync(cookie, options.url);
 
-    entities.forEach((entity) => {
-      let cookieJar = request.jar();
-      cookieJar.setCookie(cookie, options.url);
-
+    entities.forEach(async (entity) => {
       const requestOptions = {
         headers: {
           'X-SecurityCenter': token.token
@@ -166,17 +173,21 @@ function doLookup(entities, options, cb) {
         requestWithDefaults(requestOptions, function (error, res, body) {
           const statusCode = res && res.statusCode;
           if (error) {
-            return done(error);
+            return done({
+              detail: 'Network error',
+              error
+            });
           }
 
           Logger.trace(requestOptions);
           Logger.trace({ body, statusCode: statusCode || 'N/A' }, 'Result of Lookup');
 
-          if (statusCodeIsInvalid(statusCode))
+          if (statusCodeIsInvalid(statusCode)) {
             return done({
               err: body,
               detail: `${body.error}: ${body.message}`
             });
+          }
 
           done(null, {
             entity,
@@ -188,7 +199,7 @@ function doLookup(entities, options, cb) {
 
     async.parallelLimit(tasks, MAX_PARALLEL_LOOKUPS, (err, results) => {
       if (err) {
-        Logger.error({ err }, 'Error');
+        Logger.error({ err }, 'Lookup Error');
         cb(err);
         return;
       }
