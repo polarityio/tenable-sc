@@ -70,7 +70,8 @@ function getAuthToken({ url: tenableScUrl, userName, password, ...options }, cal
         username: userName,
         password
       },
-      json: true
+      json: true,
+      timeout: 30000
     },
     (err, resp, body) => {
       if (err) {
