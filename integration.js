@@ -123,11 +123,10 @@ function doLookup(entities, options, cb) {
     Logger.trace({ token }, 'what does the token look like in doLookup');
 
     let { cookie } = token;
+    let cookieJar = request.jar();
+    cookieJar.setCookieSync(cookie, options.url);
 
-    entities.forEach((entity) => {
-      let cookieJar = request.jar();
-      cookieJar.setCookie(cookie, options.url);
-
+    entities.forEach(async (entity) => {
       const requestOptions = {
         headers: {
           'X-SecurityCenter': token.token
