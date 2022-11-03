@@ -2,6 +2,7 @@
 
 const request = require('postman-request');
 const _ = require('lodash');
+const Bottleneck = require('bottleneck/es5');
 const fp = require('lodash/fp');
 const config = require('./config/config');
 const async = require('async');
@@ -17,13 +18,22 @@ const tokenCache = new NodeCache({
   stdTTL: 1000 * 1000
 });
 
+const _setupLimiter = (options) => {
+  limiter = new Bottleneck({
+    maxConcurrent: Number.parseInt(options.maxConcurrent, 10), // no more than 5 lookups can be running at single time
+    highWater: 100, // no more than 100 lookups can be queued up
+    strategy: Bottleneck.strategy.OVERFLOW,
+    minTime: Number.parseInt(options.minTime, 10) // don't run lookups faster than 1 every 200 ms
+  });
+};
+
 /**
  *
  * @param entities
  * @param options
  * @param cb
  */
-function startup(logger) {
+function startup (logger) {
   let defaults = {};
   Logger = logger;
 
@@ -59,7 +69,7 @@ function startup(logger) {
 const getTokenCacheKey = (options) => options.apiKey + options.apiSecret;
 const statusCodeIsInvalid = (statusCode) => [200, 404, 202].every((validStatusCode) => statusCode !== validStatusCode);
 
-function getAuthToken({ url: tenableScUrl, userName, password, ...options }, callback) {
+function getAuthToken ({ url: tenableScUrl, userName, password, ...options }, callback) {
   let cacheKey = getTokenCacheKey(options);
 
   requestWithDefaults(
@@ -105,7 +115,7 @@ function getAuthToken({ url: tenableScUrl, userName, password, ...options }, cal
   );
 }
 
-function doLookup(entities, options, cb) {
+function doLookup (entities, options, cb) {
   let lookupResults = [];
   let tasks = [];
 
@@ -257,7 +267,7 @@ const getFormattedDetails = (body, options, entity) => ({
 const getSeverityResults = (severityId, body) =>
   fp.filter(fp.flow(fp.get('severity.id'), fp.eq(severityId)), fp.get('response.results', body));
 
-function validateStringOption(errors, options, optionName, errMessage) {
+function validateStringOption (errors, options, optionName, errMessage) {
   if (
     typeof options[optionName].value !== 'string' ||
     (typeof options[optionName].value === 'string' && options[optionName].value.length === 0)
@@ -269,7 +279,27 @@ function validateStringOption(errors, options, optionName, errMessage) {
   }
 }
 
-function validateOptions(options, callback) {
+function onMessage (payload, options, callback) {
+  switch (payload.action) {
+    case 'retryLookup':
+      doLookup([payload.entity], options, (err, lookupResults) => {
+        if (err) {
+          Logger.error({ err }, 'Error retrying lookup');
+          callback(err);
+        } else {
+          callback(
+            null,
+            lookupResults && lookupResults[0] && lookupResults[0].data === null
+              ? { data: { summary: ['No Results Found on Retry'] } }
+              : lookupResults[0]
+          );
+        }
+      });
+      break;
+  }
+}
+
+function validateOptions (options, callback) {
   let errors = [];
 
   validateStringOption(errors, options, 'url', 'You must provide a valid API URL');
@@ -281,5 +311,6 @@ function validateOptions(options, callback) {
 module.exports = {
   doLookup,
   startup,
-  validateOptions
+  validateOptions,
+  onMessage
 };
