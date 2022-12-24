@@ -4,6 +4,7 @@ const request = require('postman-request');
 const _ = require('lodash');
 const fp = require('lodash/fp');
 const config = require('./config/config');
+const { version: packageVersion } = require('./package.json');
 const async = require('async');
 const fs = require('fs');
 
@@ -11,6 +12,7 @@ let Logger;
 let requestWithDefaults;
 
 const MAX_PARALLEL_LOOKUPS = 10;
+const USER_AGENT = `polarity-tenablesc-integration-v${packageVersion}`;
 
 const NodeCache = require('node-cache');
 const tokenCache = new NodeCache({
@@ -53,6 +55,10 @@ function startup(logger) {
     defaults.rejectUnauthorized = rejectUnauthorized;
   }
 
+  defaults.headers = {
+    'User-Agent': USER_AGENT
+  };
+
   requestWithDefaults = request.defaults(defaults);
 }
 
@@ -82,17 +88,23 @@ function getAuthToken({ url: tenableScUrl, userName, password, ...options }, cal
         return;
       }
 
-      Logger.trace({ body }, 'Result of token lookup');
+      Logger.trace({ resp }, 'Result of token lookup');
 
       if (resp.statusCode != 200) {
-        callback({ err: new Error('status code was not 200'), body });
+        callback({
+          detail: `Unexpected status code (${resp.statusCode}) received. ${
+            body && body.error_msg ? body.error_msg : ''
+          }`,
+          body,
+          statusCode: resp.statusCode
+        });
         return;
       }
 
       let cookie = resp.headers['set-cookie'][1];
 
       if (typeof cookie === undefined) {
-        callback({ err: new Error('Cookie Not Available'), body });
+        callback({ detail: `Response did not include expected cookie`, body, statusCode: resp.statusCode });
         return;
       }
 
@@ -121,7 +133,7 @@ function doLookup(entities, options, cb) {
       return;
     }
 
-    Logger.trace({ token }, 'what does the token look like in doLookup');
+    Logger.trace({ token }, 'Retrieved Token');
 
     let { cookie } = token;
     let cookieJar = request.jar();
@@ -174,7 +186,7 @@ function doLookup(entities, options, cb) {
           const statusCode = res && res.statusCode;
           if (error) {
             return done({
-              detail: 'Network error',
+              detail: 'HTTP Network error',
               error
             });
           }
@@ -184,8 +196,9 @@ function doLookup(entities, options, cb) {
 
           if (statusCodeIsInvalid(statusCode)) {
             return done({
-              err: body,
-              detail: `${body.error}: ${body.message}`
+              body,
+              detail: body && body.error_msg ? body.error_msg : 'Unexpected error encountered',
+              statusCode
             });
           }
 
