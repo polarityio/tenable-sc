@@ -91,7 +91,7 @@ module.exports = {
     {
       key: 'url',
       name: 'tenable.sc URL',
-      description: 'The base URL for the tenable.sc server including the schema (i.e., https://)',
+      description: 'The base URL for the tenable.sc server including the schema (i.e., https://). This option must be set to "Users can view only".',
       type: 'text',
       default: '',
       userCanEdit: false,
