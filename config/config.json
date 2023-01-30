@@ -1,0 +1,70 @@
+{
+  "name": "tenable.sc (Security Center)",
+  "acronym": "SC",
+  "defaultColor": "dark-orange",
+  "description": "Search Tenable.sc scan results by IP address or by CVE.",
+  "entityTypes": [
+    "IPv4",
+    "cve"
+  ],
+  "styles": [
+    "./styles/sc.less"
+  ],
+  "block": {
+    "component": {
+      "file": "./components/sc-block.js"
+    },
+    "template": {
+      "file": "./templates/sc-block.hbs"
+    }
+  },
+  "request": {
+    "cert": "",
+    "key": "",
+    "passphrase": "",
+    "ca": "",
+    "proxy": "",
+    "rejectUnauthorized": true
+  },
+  "logging": {
+    "level": "info"
+  },
+  "options": [
+    {
+      "key": "url",
+      "name": "tenable.sc URL",
+      "description": "The base URL for the tenable.sc server including the schema (i.e., https://)",
+      "type": "text",
+      "default": "",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "userName",
+      "name": "tenable.sc Username",
+      "description": "Valid tenable.sc Username",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "password",
+      "name": "tenable.sc Password",
+      "description": "Valid tenable.sc Password",
+      "default": "",
+      "type": "password",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "maxResults",
+      "name": "Maximum Number of CVE Search Results to Return",
+      "description": "Maximum number of CVE search results to return",
+      "default": 50,
+      "type": "number",
+      "userCanEdit": false,
+      "adminOnly": true
+    }
+  ]
+}
