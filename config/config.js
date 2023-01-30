@@ -25,7 +25,7 @@ module.exports = {
    */
   description:
     'tenable.sc provides the industrys most comprehensive vulnerability coverage with real-time continuous assessment of your network',
-  entityTypes: ['IPv4', 'domain', 'cve'],
+  entityTypes: ['IPv4', 'cve'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.

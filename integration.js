@@ -25,7 +25,7 @@ const tokenCache = new NodeCache({
  * @param options
  * @param cb
  */
-function startup(logger) {
+function startup (logger) {
   let defaults = {};
   Logger = logger;
 
@@ -65,7 +65,7 @@ function startup(logger) {
 const getTokenCacheKey = (options) => options.apiKey + options.apiSecret;
 const statusCodeIsInvalid = (statusCode) => [200, 404, 202].every((validStatusCode) => statusCode !== validStatusCode);
 
-function getAuthToken({ url: tenableScUrl, userName, password, ...options }, callback) {
+function getAuthToken ({ url: tenableScUrl, userName, password, ...options }, callback) {
   let cacheKey = getTokenCacheKey(options);
 
   requestWithDefaults(
@@ -117,7 +117,7 @@ function getAuthToken({ url: tenableScUrl, userName, password, ...options }, cal
   );
 }
 
-function doLookup(entities, options, cb) {
+function doLookup (entities, options, cb) {
   let lookupResults = [];
   let tasks = [];
 
@@ -153,12 +153,6 @@ function doLookup(entities, options, cb) {
           (requestOptions.uri = `${options.url}/rest/deviceInfo`),
           (requestOptions.qs = {
             ip: `${entity.value}`
-          });
-      } else if (entity.isDomain) {
-        (requestOptions.method = 'GET'),
-          (requestOptions.uri = `${options.url}/rest/deviceInfo`),
-          (requestOptions.qs = {
-            dnsName: `${entity.value}`
           });
       } else if (entity.type === 'cve') {
         (requestOptions.method = 'POST'),
@@ -270,7 +264,7 @@ const getFormattedDetails = (body, options, entity) => ({
 const getSeverityResults = (severityId, body) =>
   fp.filter(fp.flow(fp.get('severity.id'), fp.eq(severityId)), fp.get('response.results', body));
 
-function validateStringOption(errors, options, optionName, errMessage) {
+function validateStringOption (errors, options, optionName, errMessage) {
   if (
     typeof options[optionName].value !== 'string' ||
     (typeof options[optionName].value === 'string' && options[optionName].value.length === 0)
@@ -282,7 +276,7 @@ function validateStringOption(errors, options, optionName, errMessage) {
   }
 }
 
-function validateOptions(options, callback) {
+function validateOptions (options, callback) {
   let errors = [];
 
   validateStringOption(errors, options, 'url', 'You must provide a valid API URL');
