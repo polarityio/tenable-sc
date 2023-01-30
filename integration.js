@@ -7,6 +7,7 @@ const config = require('./config/config');
 const { version: packageVersion } = require('./package.json');
 const async = require('async');
 const fs = require('fs');
+const { DateTime } = require('luxon');
 
 let Logger;
 let requestWithDefaults;
@@ -25,7 +26,7 @@ const tokenCache = new NodeCache({
  * @param options
  * @param cb
  */
-function startup (logger) {
+function startup(logger) {
   let defaults = {};
   Logger = logger;
 
@@ -65,7 +66,7 @@ function startup (logger) {
 const getTokenCacheKey = (options) => options.apiKey + options.apiSecret;
 const statusCodeIsInvalid = (statusCode) => [200, 404, 202].every((validStatusCode) => statusCode !== validStatusCode);
 
-function getAuthToken ({ url: tenableScUrl, userName, password, ...options }, callback) {
+function getAuthToken({ url: tenableScUrl, userName, password, ...options }, callback) {
   let cacheKey = getTokenCacheKey(options);
 
   requestWithDefaults(
@@ -117,7 +118,7 @@ function getAuthToken ({ url: tenableScUrl, userName, password, ...options }, ca
   );
 }
 
-function doLookup (entities, options, cb) {
+function doLookup(entities, options, cb) {
   let lookupResults = [];
   let tasks = [];
 
@@ -224,11 +225,12 @@ function doLookup (entities, options, cb) {
             data: null
           });
         } else {
+          const formattedDetails = getFormattedDetails(body, options, entity);
           lookupResults.push({
             entity,
             data: {
-              summary: [],
-              details: getFormattedDetails(body, options, entity)
+              summary: getSummaryTags(formattedDetails),
+              details: formattedDetails
             }
           });
         }
@@ -239,6 +241,27 @@ function doLookup (entities, options, cb) {
     });
   });
 }
+
+const getSummaryTags = (formattedDetails) => {
+  const tags = [];
+  if (formattedDetails.response && formattedDetails.response.severityCritical) {
+    tags.push(`Critical Severities: ${formattedDetails.response.severityCritical}`);
+  }
+  if (formattedDetails.response && formattedDetails.response.severityHigh) {
+    tags.push(`High Severities: ${formattedDetails.response.severityHigh}`);
+  }
+  if (formattedDetails.response && formattedDetails.response.hasCompliance) {
+    tags.push(`Has Compliance: ${formattedDetails.response.hasCompliance}`);
+  }
+  if (formattedDetails.response && !isNaN(formattedDetails.response.lastScan)) {
+    tags.push(`Last Scan: ${DateTime.fromSeconds(+formattedDetails.response.lastScan).toLocaleString(DateTime.DATETIME_SHORT)}`);
+  }
+  if (formattedDetails.response && formattedDetails.response.totalRecords) {
+    tags.push(`${formattedDetails.response.totalRecords} records found`);
+    tags.push(`Critical Severities: ${formattedDetails.response.criticalSeverityResults.length}`);
+  }
+  return tags;
+};
 
 const _isMiss = (body) => !body || !body.response;
 
@@ -255,16 +278,14 @@ const getFormattedDetails = (body, options, entity) => ({
     lowSeverityResults: getSeverityResults('1', body),
     mediumSeverityResults: getSeverityResults('2', body),
     highSeverityResults: getSeverityResults('3', body),
-    criticalSeverityResults: getSeverityResults('4', body),
-    lastScan: new Date(parseInt(body.response.lastScan) * 1000),
-    lastAuthRun: new Date(parseInt(body.response.lastAuthRun) * 1000)
+    criticalSeverityResults: getSeverityResults('4', body)
   }
 });
 
 const getSeverityResults = (severityId, body) =>
   fp.filter(fp.flow(fp.get('severity.id'), fp.eq(severityId)), fp.get('response.results', body));
 
-function validateStringOption (errors, options, optionName, errMessage) {
+function validateStringOption(errors, options, optionName, errMessage) {
   if (
     typeof options[optionName].value !== 'string' ||
     (typeof options[optionName].value === 'string' && options[optionName].value.length === 0)
@@ -276,7 +297,7 @@ function validateStringOption (errors, options, optionName, errMessage) {
   }
 }
 
-function validateOptions (options, callback) {
+function validateOptions(options, callback) {
   let errors = [];
 
   validateStringOption(errors, options, 'url', 'You must provide a valid API URL');

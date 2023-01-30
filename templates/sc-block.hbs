@@ -131,13 +131,13 @@
   </div>
   <div>
     <span class="p-key">Last Scan Date:</span>
-    <span class="p-value">{{moment-format details.response.lastScan timeZone=timezone}}</span>
+    <span class="p-value">{{moment-format (unix details.response.lastScan) timeZone=timezone}}</span>
   </div>
 {{/if}}
 {{#if details.response.lastAuthRun}}
   <div>
     <span class="p-key">Last Auth Run:</span>
-    <span class="p-value">{{mdetails.response.lastAuthRun timeZone=timezone}}</span>
+    <span class="p-value">{{moment-format (unix mdetails.response.lastAuthRun) timeZone=timezone}}</span>
   </div>
 {{/if}}
 {{#if details.response.hasPassive}}
