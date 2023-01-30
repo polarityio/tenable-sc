@@ -24,7 +24,7 @@ module.exports = {
    * @optional
    */
   description:
-    'tenable.sc provides the industrys most comprehensive vulnerability coverage with real-time continuous assessment of your network',
+    'Search Tenable.sc scan results by IP address or by CVE.',
   entityTypes: ['IPv4', 'cve'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
@@ -50,14 +50,6 @@ module.exports = {
       file: './templates/sc-block.hbs'
     }
   },
-  summary: {
-    component: {
-      file: './components/sc-summary.js'
-    },
-    template: {
-      file: './templates/sc-summary.hbs'
-    }
-  },
   request: {
     // Provide the path to your certFile. Leave an empty string to ignore this option.
     // Relative paths are relative to the Urlhaus integration's root directory
@@ -78,7 +70,7 @@ module.exports = {
     rejectUnauthorized: true
   },
   logging: {
-    level: 'info' //trace, debug, info, warn, error, fatal
+    level: 'trace' //trace, debug, info, warn, error, fatal
   },
   /**
    * Options that are displayed to the user/admin in the Polarity integration user-interface.  Should be structured
@@ -103,8 +95,8 @@ module.exports = {
       description: 'Valid tenable.sc Username',
       default: '',
       type: 'text',
-      userCanEdit: true,
-      adminOnly: false
+      userCanEdit: false,
+      adminOnly: true
     },
     {
       key: 'password',
@@ -112,8 +104,8 @@ module.exports = {
       description: 'Valid tenable.sc Password',
       default: '',
       type: 'password',
-      userCanEdit: true,
-      adminOnly: false
+      userCanEdit: false,
+      adminOnly: true
     },
     {
       key: 'maxResults',
