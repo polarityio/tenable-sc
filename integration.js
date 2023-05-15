@@ -119,8 +119,6 @@ function getAuthToken ({ url: tenableScUrl, userName, password, ...options }, ca
 
       tokenCache.set(cacheKey, { cookie, token: body.response.token });
 
-      Logger.trace({ tokenCache }, 'Checking TokenCache');
-
       callback(null, { cookie, token: body.response.token });
     }
   );
@@ -148,16 +146,11 @@ function doLookup (entities, options, cb) {
     let cookieJar = request.jar();
     cookieJar.setCookie(cookie, options.url);
 
-    Logger.trace({ token }, 'Retrieved Token');
-
     entities.forEach((entity) => {
       if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
         hasValidIndicator = true;
-        Logger.trace({ HERE: 123123132, limiter });
 
         limiter.submit(_fetchApiData, entity, token, cookieJar, options, (err, result) => {
-          Logger.trace({ HERE: 2222222, limiter });
-
           const { body } = result;
           const maxRequestQueueLimitHit =
             (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
