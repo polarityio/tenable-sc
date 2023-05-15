@@ -28,6 +28,12 @@ tenable.sc Username. Please ensure the user has the appropriate access to the AP
 ### tenable.sc Password
 Valid password associated with the tenable.sc user.
 
+### Max Concurrent Requests
+Maximum number of concurrent requests.  Integration must be restarted after changing this option. Defaults to 20.
+
+### Minimum Time Between Lookups
+Minimum amount of time in milliseconds between lookups. Integration must be restarted after changing this option. Defaults to 100.
+
 ## Installation Instructions
 
 Installation instructions for integrations are provided on the [PolarityIO GitHub Page](https://polarityio.github.io/).

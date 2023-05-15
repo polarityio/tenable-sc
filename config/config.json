@@ -1,0 +1,71 @@
+{
+  "name": "tenable.sc (Security Center)",
+  "acronym": "SC",
+  "defaultColor": "dark-orange",
+  "description": "tenable.sc provides the industrys most comprehensive vulnerability coverage with real-time continuous assessment of your network",
+  "entityTypes": ["IPv4", "domain", "cve"],
+  "styles": ["./styles/sc.less"],
+  "block": { "component": { "file": "./components/sc-block.js" }, "template": { "file": "./templates/sc-block.hbs" } },
+  "summary": {
+    "component": { "file": "./components/sc-summary.js" },
+    "template": { "file": "./templates/sc-summary.hbs" }
+  },
+  "request": { "cert": "", "key": "", "passphrase": "", "ca": "", "proxy": "", "rejectUnauthorized": true },
+  "logging": { "level": "info" },
+  "options": [
+    {
+      "key": "url",
+      "name": "tenable.sc URL",
+      "description": "The base URL for the tenable.sc server including the schema (i.e., https://)",
+      "type": "text",
+      "default": "",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "userName",
+      "name": "tenable.sc Username",
+      "description": "Valid tenable.sc Username",
+      "default": "",
+      "type": "text",
+      "userCanEdit": true,
+      "adminOnly": false
+    },
+    {
+      "key": "password",
+      "name": "tenable.sc Password",
+      "description": "Valid tenable.sc Password",
+      "default": "",
+      "type": "password",
+      "userCanEdit": true,
+      "adminOnly": false
+    },
+    {
+      "key": "maxResults",
+      "name": "Maximum Number of CVE Search Results to Return",
+      "description": "Maximum number of CVE search results to return",
+      "default": 50,
+      "type": "number",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "maxConcurrent",
+      "name": "Max Concurrent Requests",
+      "description": "Maximum number of concurrent requests.  Integration must be restarted after changing this option. Defaults to 20.",
+      "default": 20,
+      "type": "number",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "minTime",
+      "name": "Minimum Time Between Lookups",
+      "description": "Minimum amount of time in milliseconds between lookups. Integration must be restarted after changing this option. Defaults to 100.",
+      "default": 100,
+      "type": "number",
+      "userCanEdit": false,
+      "adminOnly": true
+    }
+  ]
+}
