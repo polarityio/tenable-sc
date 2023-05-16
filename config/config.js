@@ -24,7 +24,7 @@ module.exports = {
    * @optional
    */
   description:
-    'Search Tenable.sc scan results by IP address or by CVE.',
+    "Tenable.sc provides the industry's most comprehensive vulnerability coverage with real-time continuous assessment of your network",
   entityTypes: ['IPv4', 'cve'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
@@ -48,6 +48,14 @@ module.exports = {
     },
     template: {
       file: './templates/sc-block.hbs'
+    }
+  },
+  summary: {
+    component: {
+      file: './components/sc-summary.js'
+    },
+    template: {
+      file: './templates/sc-summary.hbs'
     }
   },
   request: {
@@ -83,7 +91,8 @@ module.exports = {
     {
       key: 'url',
       name: 'tenable.sc URL',
-      description: 'The base URL for the tenable.sc server including the schema (i.e., https://). This option must be set to "Users can view only".',
+      description:
+        'The base URL for the tenable.sc server including the schema (i.e., https://). This option must be set to "Users can view only".',
       type: 'text',
       default: '',
       userCanEdit: false,

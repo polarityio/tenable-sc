@@ -6,7 +6,6 @@ const _ = require('lodash');
 const fp = require('lodash/fp');
 const config = require('./config/config');
 const fs = require('fs');
-const { DateTime } = require('luxon');
 
 let Logger;
 let requestWithDefaults;
@@ -68,10 +67,6 @@ function startup (logger) {
     defaults.rejectUnauthorized = rejectUnauthorized;
   }
 
-  defaults.headers = {
-    'User-Agent': USER_AGENT
-  };
-
   requestWithDefaults = request.defaults(defaults);
 }
 
@@ -97,27 +92,22 @@ function getAuthToken ({ url: tenableScUrl, userName, password, ...options }, ca
         return;
       }
 
-      Logger.trace({ resp }, 'Result of token lookup');
+      Logger.trace({ body }, 'Result of token lookup');
 
       if (resp.statusCode != 200) {
-        callback({
-          detail: `Unexpected status code (${resp.statusCode}) received. ${
-            body && body.error_msg ? body.error_msg : ''
-          }`,
-          body,
-          statusCode: resp.statusCode
-        });
+        callback({ err: new Error('status code was not 200'), body });
         return;
       }
 
       let cookie = resp.headers['set-cookie'][1];
 
       if (typeof cookie === undefined) {
-        callback({ detail: `Response did not include expected cookie`, body, statusCode: resp.statusCode });
+        callback({ err: new Error('Cookie Not Available'), body });
         return;
       }
 
       tokenCache.set(cacheKey, { cookie, token: body.response.token });
+
 
       callback(null, { cookie, token: body.response.token });
     }
@@ -146,11 +136,14 @@ function doLookup (entities, options, cb) {
     let cookieJar = request.jar();
     cookieJar.setCookie(cookie, options.url);
 
+    Logger.trace({ token }, 'what does the token look like in doLookup');
+
     entities.forEach((entity) => {
       if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
         hasValidIndicator = true;
 
         limiter.submit(_fetchApiData, entity, token, cookieJar, options, (err, result) => {
+
           const { body } = result;
           const maxRequestQueueLimitHit =
             (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
@@ -308,7 +301,9 @@ const getFormattedDetails = (body, options, entity) => ({
     lowSeverityResults: getSeverityResults('1', body),
     mediumSeverityResults: getSeverityResults('2', body),
     highSeverityResults: getSeverityResults('3', body),
-    criticalSeverityResults: getSeverityResults('4', body)
+    criticalSeverityResults: getSeverityResults('4', body),
+    lastScan: new Date(parseInt(body.response.lastScan) * 1000),
+    lastAuthRun: new Date(parseInt(body.response.lastAuthRun) * 1000)
   }
 });
 

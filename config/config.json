@@ -14,6 +14,14 @@
       "file": "./templates/sc-block.hbs"
     }
   },
+  "summary": {
+    "component": {
+      "file": "./components/sc-summary.js"
+    },
+    "template": {
+      "file": "./templates/sc-summary.hbs"
+    }
+  },
   "request": {
     "cert": "",
     "key": "",
