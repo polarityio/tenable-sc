@@ -3,23 +3,20 @@
   "name": "tenable.sc (Security Center)",
   "acronym": "SC",
   "defaultColor": "dark-orange",
-  "description": "Tenable.sc provides the industry's most comprehensive vulnerability coverage with real-time continuous assessment of your network",
-  "entityTypes": ["IPv4", "cve"],
-  "styles": ["./styles/sc.less"],
+  "description": "Search Tenable.sc scan results by IP address or by CVE.",
+  "entityTypes": [
+    "IPv4",
+    "cve"
+  ],
+  "styles": [
+    "./styles/sc.less"
+  ],
   "block": {
     "component": {
       "file": "./components/sc-block.js"
     },
     "template": {
       "file": "./templates/sc-block.hbs"
-    }
-  },
-  "summary": {
-    "component": {
-      "file": "./components/sc-summary.js"
-    },
-    "template": {
-      "file": "./templates/sc-summary.hbs"
     }
   },
   "request": {

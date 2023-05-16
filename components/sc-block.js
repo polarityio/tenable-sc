@@ -5,7 +5,7 @@ polarity.export = PolarityComponent.extend({
   }),
   numIpsShown: 0,
   numNamesShown: 0,
-  init () {
+  init() {
     this.set(
       'numIpsShown',
       Math.min(
