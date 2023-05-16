@@ -8,11 +8,17 @@ polarity.export = PolarityComponent.extend({
   init () {
     this.set(
       'numIpsShown',
-      Math.min(this.get('details.response.returnedRecords'), this.get('details.response.totalRecords'))
+      Math.min(
+        this.get('details.response.returnedRecords'),
+        this.get('details.response.totalRecords')
+      )
     );
     this.set(
       'numNamesShown',
-      Math.min(this.get('details.response.returnedRecords'), this.get('details.response.totalRecords'))
+      Math.min(
+        this.get('details.response.returnedRecords'),
+        this.get('details.response.totalRecords')
+      )
     );
 
     this._super(...arguments);

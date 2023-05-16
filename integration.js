@@ -1,11 +1,13 @@
 'use strict';
 
 const Bottleneck = require('bottleneck/es5');
-const request = require('request');
+const request = require('postman-request');
 const _ = require('lodash');
 const fp = require('lodash/fp');
 const config = require('./config/config');
+const { version: packageVersion } = require('./package.json');
 const fs = require('fs');
+const { DateTime } = require('luxon');
 
 let Logger;
 let requestWithDefaults;
@@ -16,10 +18,21 @@ const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 
 let limiter = null;
 
+const USER_AGENT = `polarity-tenablesc-integration-v${packageVersion}`;
+
 const NodeCache = require('node-cache');
 const tokenCache = new NodeCache({
   stdTTL: 1000 * 1000
 });
+
+const _setupLimiter = (options) => {
+  limiter = new Bottleneck({
+    maxConcurrent: fp.parseInt(10, options.maxConcurrent), // no more than options.maxConcurrent lookups can be running at single time
+    highWater: 100, // no more than 100 lookups can be queued up
+    strategy: Bottleneck.strategy.OVERFLOW,
+    minTime: fp.parseInt(10, options.minTime) // don't run lookups faster than 1 every options.minTime ms
+  });
+};
 
 /**
  *
@@ -27,17 +40,7 @@ const tokenCache = new NodeCache({
  * @param options
  * @param cb
  */
-
-const _setupLimiter = (options) => {
-  limiter = new Bottleneck({
-    maxConcurrent: options.maxConcurrent, // no more than 5 lookups can be running at single time
-    highWater: 100, // no more than 100 lookups can be queued up
-    strategy: Bottleneck.strategy.OVERFLOW,
-    minTime: options.minTime // don't run lookups faster than 1 every 200 ms
-  });
-};
-
-function startup (logger) {
+function startup(logger) {
   let defaults = {};
   Logger = logger;
 
@@ -67,13 +70,18 @@ function startup (logger) {
     defaults.rejectUnauthorized = rejectUnauthorized;
   }
 
+  defaults.headers = {
+    'User-Agent': USER_AGENT
+  };
+
   requestWithDefaults = request.defaults(defaults);
 }
 
 const getTokenCacheKey = (options) => options.apiKey + options.apiSecret;
-const statusCodeIsInvalid = (statusCode) => [200, 404, 202].every((validStatusCode) => statusCode !== validStatusCode);
+const statusCodeIsInvalid = (statusCode) =>
+  [200, 404, 202].every((validStatusCode) => statusCode !== validStatusCode);
 
-function getAuthToken ({ url: tenableScUrl, userName, password, ...options }, callback) {
+function getAuthToken({ url: tenableScUrl, userName, password, ...options }, callback) {
   let cacheKey = getTokenCacheKey(options);
 
   requestWithDefaults(
@@ -88,144 +96,186 @@ function getAuthToken ({ url: tenableScUrl, userName, password, ...options }, ca
     },
     (err, resp, body) => {
       if (err) {
-        callback(err);
+        callback({
+          detail: err.code ? `Network Error: ${err.code}` : 'Network error encountered',
+          err
+        });
         return;
       }
 
-      Logger.trace({ body }, 'Result of token lookup');
+      Logger.trace({ resp }, 'Result of token lookup');
 
       if (resp.statusCode != 200) {
-        callback({ err: new Error('status code was not 200'), body });
+        callback({
+          detail: `Unexpected status code (${resp.statusCode}) received. ${
+            body && body.error_msg ? body.error_msg : ''
+          }`,
+          body,
+          statusCode: resp.statusCode
+        });
         return;
       }
 
       let cookie = resp.headers['set-cookie'][1];
 
       if (typeof cookie === undefined) {
-        callback({ err: new Error('Cookie Not Available'), body });
+        callback({
+          detail: `Response did not include expected cookie`,
+          body,
+          statusCode: resp.statusCode
+        });
         return;
       }
 
       tokenCache.set(cacheKey, { cookie, token: body.response.token });
 
+      Logger.trace({ tokenCache }, 'Checking TokenCache');
 
       callback(null, { cookie, token: body.response.token });
     }
   );
 }
 
-function doLookup (entities, options, cb) {
-  const lookupResults = [];
-  const errors = [];
-  const blockedEntities = [];
-  let numConnectionResets = 0;
-  let numThrottled = 0;
-  let hasValidIndicator = false;
+function doLookup(entities, options, cb) {
+  try {
+    const lookupResults = [];
+    const errors = [];
+    const blockedEntities = [];
+    let numConnectionResets = 0;
+    let numThrottled = 0;
+    let hasValidIndicator = false;
 
-  if (!limiter) _setupLimiter(options);
+    if (!limiter) _setupLimiter(options);
 
-  Logger.debug(entities);
+    Logger.debug(entities);
 
-  getAuthToken(options, (err, token) => {
-    if (err) {
-      Logger.error('get token errored', err);
-      return;
-    }
-    let { cookie } = token;
+    getAuthToken(options, (err, token) => {
+      try {
+        if (err) {
+          Logger.error(err, 'Error getting auth token');
+          cb({
+            detail: err.detail ? err.detail : 'Unable to authenticate to Tenable',
+            err
+          });
+          return;
+        }
 
-    let cookieJar = request.jar();
-    cookieJar.setCookie(cookie, options.url);
+        Logger.trace({ token }, 'Retrieved Token');
 
-    Logger.trace({ token }, 'what does the token look like in doLookup');
+        let { cookie } = token;
+        let cookieJar = request.jar();
+        cookieJar.setCookieSync(cookie, options.url);
 
-    entities.forEach((entity) => {
-      if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
-        hasValidIndicator = true;
+        Logger.trace({ token }, 'what does the token look like in doLookup');
 
-        limiter.submit(_fetchApiData, entity, token, cookieJar, options, (err, result) => {
+        entities.forEach((entity) => {
+          if (!_isInvalidEntity(entity) && !_isEntityBlocklisted(entity, options)) {
+            hasValidIndicator = true;
 
-          const { body } = result;
-          const maxRequestQueueLimitHit =
-            (_.isEmpty(err) && _.isEmpty(result)) || (err && err.message === 'This job has been dropped by Bottleneck');
-          const statusCode = _.get(err, 'statusCode', '');
-          const isGatewayTimeout = statusCode === 502 || statusCode === 504;
-          const isConnectionReset = _.get(err, 'error.code', '') === 'ECONNRESET';
-
-          if (maxRequestQueueLimitHit || isConnectionReset || isGatewayTimeout) {
-            // Tracking for logging purposes
-            if (isConnectionReset) numConnectionResets++;
-            if (maxRequestQueueLimitHit) numThrottled++;
-
-            lookupResults.push({
+            limiter.submit(
+              _fetchApiData,
               entity,
-              isVolatile: true,
-              data: {
-                summary: ['! Lookup limit reached'],
-                details: {
-                  maxRequestQueueLimitHit,
-                  isConnectionReset,
-                  isGatewayTimeout,
-                  summaryTag: '! Lookup limit reached',
-                  errorMessage:
-                    'The search failed due to the API search limit. You can retry your search by pressing the "Retry Search" button.'
+              token,
+              cookieJar,
+              options,
+              (err, result) => {
+                const maxRequestQueueLimitHit =
+                  (_.isEmpty(err) && _.isEmpty(result)) ||
+                  (err && err.message === 'This job has been dropped by Bottleneck');
+                const statusCode = _.get(err, 'statusCode', '');
+                const isGatewayTimeout = statusCode === 502 || statusCode === 504;
+                const isConnectionReset = _.get(err, 'error.code', '') === 'ECONNRESET';
+
+                if (maxRequestQueueLimitHit || isConnectionReset || isGatewayTimeout) {
+                  // Tracking for logging purposes
+                  if (isConnectionReset) numConnectionResets++;
+                  if (maxRequestQueueLimitHit) numThrottled++;
+
+                  lookupResults.push({
+                    entity,
+                    isVolatile: true,
+                    data: {
+                      summary: ['! Lookup limit reached'],
+                      details: {
+                        maxRequestQueueLimitHit,
+                        isConnectionReset,
+                        isGatewayTimeout,
+                        summaryTag: '! Lookup limit reached',
+                        errorMessage:
+                          'The search failed due to the API search limit. You can retry your search by pressing the "Retry Search" button.'
+                      }
+                    }
+                  });
+                } else if (err) {
+                  errors.push(err);
+                } else {
+                  const body = fp.get('body', result);
+
+                  if (
+                    body === null ||
+                    _isMiss(body) ||
+                    _.isEmpty(body) ||
+                    (body.response.results && _.isEmpty(body.response.results)) ||
+                    (body.response.repositories && _.isEmpty(body.response.repositories))
+                  ) {
+                    lookupResults.push({
+                      entity,
+                      data: null
+                    });
+                  } else {
+                    const formattedDetails = getFormattedDetails(body, options, entity);
+                    lookupResults.push({
+                      entity,
+                      data: {
+                        summary: getSummaryTags(formattedDetails),
+                        details: formattedDetails
+                      }
+                    });
+                  }
+                }
+
+                if (
+                  lookupResults.length + errors.length + blockedEntities.length ===
+                  entities.length
+                ) {
+                  if (numConnectionResets > 0 || numThrottled > 0) {
+                    Logger.warn(
+                      {
+                        numEntitiesLookedUp: entities.length,
+                        numConnectionResets: numConnectionResets,
+                        numLookupsThrottled: numThrottled
+                      },
+                      'Lookup Limit Error'
+                    );
+                  }
+                  // we got all our results
+                  if (errors.length > 0) {
+                    cb(errors);
+                  } else {
+                    Logger.trace({ LOOK: lookupResults });
+                    cb(null, lookupResults);
+                  }
                 }
               }
-            });
-          } else if (err) {
-            errors.push(err);
+            );
           } else {
-            if (
-              body === null ||
-              _isMiss(body) ||
-              _.isEmpty(body) ||
-              (body.response.results && _.isEmpty(body.response.results)) ||
-              (body.response.repositories && _.isEmpty(body.response.repositories))
-            ) {
-              lookupResults.push({
-                entity,
-                data: null
-              });
-            } else {
-              lookupResults.push({
-                entity,
-                data: {
-                  summary: [],
-
-                  details: getFormattedDetails(body, options, entity)
-                }
-              });
-            }
-          }
-
-          if (lookupResults.length + errors.length + blockedEntities.length === entities.length) {
-            if (numConnectionResets > 0 || numThrottled > 0) {
-              Logger.warn(
-                {
-                  numEntitiesLookedUp: entities.length,
-                  numConnectionResets: numConnectionResets,
-                  numLookupsThrottled: numThrottled
-                },
-                'Lookup Limit Error'
-              );
-            }
-            // we got all our results
-            if (errors.length > 0) {
-              cb(errors);
-            } else {
-              Logger.trace({ LOOK: lookupResults });
-              cb(null, lookupResults);
-            }
+            blockedEntities.push(entity);
           }
         });
-      } else {
-        blockedEntities.push(entity);
+        if (!hasValidIndicator) {
+          cb(null, []);
+        }
+      } catch (error) {
+        const parseErrorToReadableJson = (error) =>
+          JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
+        Logger.trace({ error: parseErrorToReadableJson(error) }, 'Error in doLookup');
       }
     });
-
-    if (!hasValidIndicator) {
-      cb(null, []);
-    }
-  });
+  } catch (error) {
+    const parseErrorToReadableJson = (error) =>
+      JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    Logger.trace({ error: parseErrorToReadableJson(error) }, 'Error in doLookup');
+  }
 }
 
 const _fetchApiData = (entity, token, cookieJar, options, cb) => {
@@ -286,6 +336,33 @@ const _fetchApiData = (entity, token, cookieJar, options, cb) => {
   });
 };
 
+const getSummaryTags = (formattedDetails) => {
+  const tags = [];
+  if (formattedDetails.response && formattedDetails.response.severityCritical) {
+    tags.push(`Critical Severities: ${formattedDetails.response.severityCritical}`);
+  }
+  if (formattedDetails.response && formattedDetails.response.severityHigh) {
+    tags.push(`High Severities: ${formattedDetails.response.severityHigh}`);
+  }
+  if (formattedDetails.response && formattedDetails.response.hasCompliance) {
+    tags.push(`Has Compliance: ${formattedDetails.response.hasCompliance}`);
+  }
+  if (formattedDetails.response && !isNaN(formattedDetails.response.lastScan)) {
+    tags.push(
+      `Last Scan: ${DateTime.fromSeconds(
+        formattedDetails.response.lastScan
+      ).toLocaleString(DateTime.DATETIME_SHORT)}`
+    );
+  }
+  if (formattedDetails.response && formattedDetails.response.totalRecords) {
+    tags.push(`${formattedDetails.response.totalRecords} records found`);
+    tags.push(
+      `Critical Severities: ${formattedDetails.response.criticalSeverityResults.length}`
+    );
+  }
+  return tags;
+};
+
 const _isMiss = (body) => !body || !body.response;
 
 const getFormattedDetails = (body, options, entity) => ({
@@ -301,19 +378,21 @@ const getFormattedDetails = (body, options, entity) => ({
     lowSeverityResults: getSeverityResults('1', body),
     mediumSeverityResults: getSeverityResults('2', body),
     highSeverityResults: getSeverityResults('3', body),
-    criticalSeverityResults: getSeverityResults('4', body),
-    lastScan: new Date(parseInt(body.response.lastScan) * 1000),
-    lastAuthRun: new Date(parseInt(body.response.lastAuthRun) * 1000)
+    criticalSeverityResults: getSeverityResults('4', body)
   }
 });
 
 const getSeverityResults = (severityId, body) =>
-  fp.filter(fp.flow(fp.get('severity.id'), fp.eq(severityId)), fp.get('response.results', body));
+  fp.filter(
+    fp.flow(fp.get('severity.id'), fp.eq(severityId)),
+    fp.get('response.results', body)
+  );
 
-function validateStringOption (errors, options, optionName, errMessage) {
+function validateStringOption(errors, options, optionName, errMessage) {
   if (
     typeof options[optionName].value !== 'string' ||
-    (typeof options[optionName].value === 'string' && options[optionName].value.length === 0)
+    (typeof options[optionName].value === 'string' &&
+      options[optionName].value.length === 0)
   ) {
     errors.push({
       key: optionName,
@@ -322,16 +401,31 @@ function validateStringOption (errors, options, optionName, errMessage) {
   }
 }
 
-function validateOptions (options, callback) {
+function validateOptions(options, callback) {
   let errors = [];
 
   validateStringOption(errors, options, 'url', 'You must provide a valid API URL');
   validateStringOption(errors, options, 'userName', 'You must provide a valid Username');
   validateStringOption(errors, options, 'password', 'You must provide a valid Password');
+
+  if (options.maxConcurrent.value < 1) {
+    errors = errors.concat({
+      key: 'maxConcurrent',
+      message: 'Max Concurrent Requests must be 1 or higher'
+    });
+  }
+
+  if (options.minTime.value < 1) {
+    errors = errors.concat({
+      key: 'minTime',
+      message: 'Minimum Time Between Lookups must be 1 or higher'
+    });
+  }
+
   callback(null, errors);
 }
 
-function _isInvalidEntity (entity) {
+function _isInvalidEntity(entity) {
   if (entity.value.length > MAX_ENTITY_LENGTH) {
     return true;
   }
@@ -343,7 +437,7 @@ function _isInvalidEntity (entity) {
   return false;
 }
 
-function _isEntityBlocklisted (entity, options) {
+function _isEntityBlocklisted(entity, options) {
   const blocklist = options.blocklist;
 
   Logger.trace({ blocklist: blocklist }, 'checking to see what blocklist looks like');
@@ -364,7 +458,7 @@ function _isEntityBlocklisted (entity, options) {
   return false;
 }
 
-function onMessage (payload, options, callback) {
+function onMessage(payload, options, callback) {
   switch (payload.action) {
     case 'retryLookup':
       doLookup([payload.entity], options, (err, lookupResults) => {
