@@ -1,6 +1,6 @@
 # Polarity tenable.sc Integration
 
-The Polarity tenable.sc (formerly Security Center) integration allows Polarity to search the tenable.sc API to return information IP addresses and CVEs.
+The Polarity Tenable Security Center (formerly Tenable.sc) integration allows Polarity to search the tenable.sc API to return information IP addresses and CVEs.
 
 > Starting in version 5.21 of Tenable.sc searching hosts by domains is not supported via the REST API.  As a result, the integration has removed support for domain lookups starting in the 3.1.1 release.
 
