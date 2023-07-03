@@ -137,7 +137,7 @@ function getAuthToken({ url: tenableScUrl, userName, password, ...options }, cal
 }
 
 const parseErrorToReadableJSON = (error) =>
-    JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
+  JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
 
 function doLookup(entities, options, cb) {
   try {
