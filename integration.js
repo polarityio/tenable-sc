@@ -349,7 +349,7 @@ const getSummaryTags = (formattedDetails) => {
   if (formattedDetails.response && !isNaN(formattedDetails.response.lastScan)) {
     tags.push(
       `Last Scan: ${DateTime.fromSeconds(
-        formattedDetails.response.lastScan
+        +formattedDetails.response.lastScan
       ).toLocaleString(DateTime.DATETIME_SHORT)}`
     );
   }
