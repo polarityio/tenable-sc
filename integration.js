@@ -136,6 +136,9 @@ function getAuthToken({ url: tenableScUrl, userName, password, ...options }, cal
   );
 }
 
+const parseErrorToReadableJSON = (error) =>
+    JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
+
 function doLookup(entities, options, cb) {
   try {
     const lookupResults = [];
@@ -180,7 +183,7 @@ function doLookup(entities, options, cb) {
               options,
               (err, result) => {
                 const maxRequestQueueLimitHit =
-                  (_.isEmpty(err) && _.isEmpty(result)) ||
+                  ((err === null || typeof err === 'undefined') && _.isEmpty(result)) ||
                   (err && err.message === 'This job has been dropped by Bottleneck');
                 const statusCode = _.get(err, 'statusCode', '');
                 const isGatewayTimeout = statusCode === 502 || statusCode === 504;
@@ -207,7 +210,7 @@ function doLookup(entities, options, cb) {
                     }
                   });
                 } else if (err) {
-                  errors.push(err);
+                  errors.push(parseErrorToReadableJSON(err));
                 } else {
                   const body = fp.get('body', result);
 
@@ -266,14 +269,10 @@ function doLookup(entities, options, cb) {
           cb(null, []);
         }
       } catch (error) {
-        const parseErrorToReadableJson = (error) =>
-          JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
         Logger.trace({ error: parseErrorToReadableJson(error) }, 'Error in doLookup');
       }
     });
   } catch (error) {
-    const parseErrorToReadableJson = (error) =>
-      JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
     Logger.trace({ error: parseErrorToReadableJson(error) }, 'Error in doLookup');
   }
 }
